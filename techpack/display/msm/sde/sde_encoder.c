@@ -292,6 +292,7 @@ struct sde_encoder_virt {
 	struct kthread_work input_event_work;
 	struct kthread_work esd_trigger_work;
 	struct input_handler *input_handler;
+	bool input_handler_registered;
 #if defined(CONFIG_PXLW_IRIS)
 	struct kthread_work disable_autorefresh_work;
 #endif
@@ -743,6 +744,7 @@ void sde_encoder_destroy(struct drm_encoder *drm_enc)
 
 	kfree(sde_enc->input_handler);
 	sde_enc->input_handler = NULL;
+	sde_enc->input_handler_registered = false;
 
 	kfree(sde_enc);
 }
@@ -3170,21 +3172,6 @@ static void _sde_encoder_input_handler_register(
 	}
 }
 
-static void _sde_encoder_input_handler_unregister(
-		struct drm_encoder *drm_enc)
-{
-	struct sde_encoder_virt *sde_enc = to_sde_encoder_virt(drm_enc);
-
-	if (!sde_encoder_check_curr_mode(drm_enc, MSM_DISPLAY_CMD_MODE))
-		return;
-
-	if (sde_enc->input_handler && sde_enc->input_handler->private) {
-		input_unregister_handler(sde_enc->input_handler);
-		sde_enc->input_handler->private = NULL;
-	}
-
-}
-
 static int _sde_encoder_input_handler(
 		struct sde_encoder_virt *sde_enc)
 {
@@ -3208,6 +3195,7 @@ static int _sde_encoder_input_handler(
 	input_handler->id_table = sde_input_ids;
 
 	sde_enc->input_handler = input_handler;
+	sde_enc->input_handler_registered = false;
 
 	return rc;
 }
@@ -3364,7 +3352,18 @@ static void sde_encoder_virt_enable(struct drm_encoder *drm_enc)
 		return;
 	}
 
-	_sde_encoder_input_handler_register(drm_enc);
+	/* register input handler if not already registered */
+	if (sde_enc->input_handler && !sde_enc->input_handler_registered &&
+			!msm_is_mode_seamless_dms(cur_mode) &&
+		sde_encoder_check_curr_mode(drm_enc, MSM_DISPLAY_CMD_MODE) &&
+			!msm_is_mode_seamless_dyn_clk(cur_mode)) {
+		_sde_encoder_input_handler_register(drm_enc);
+		if (!sde_enc->input_handler || !sde_enc->input_handler->private)
+			SDE_ERROR(
+			"input handler registration failed, rc = %d\n", ret);
+		else
+			sde_enc->input_handler_registered = true;
+	}
 
 	if ((drm_enc->crtc && drm_enc->crtc->state &&
 			drm_enc->crtc->state->connectors_changed &&
@@ -3495,7 +3494,11 @@ static void sde_encoder_virt_disable(struct drm_encoder *drm_enc)
 	if (!sde_encoder_in_clone_mode(drm_enc))
 		sde_encoder_wait_for_event(drm_enc, MSM_ENC_TX_COMPLETE);
 
-	_sde_encoder_input_handler_unregister(drm_enc);
+	if (sde_enc->input_handler && sde_enc->input_handler_registered &&
+		sde_encoder_check_curr_mode(drm_enc, MSM_DISPLAY_CMD_MODE)) {
+		input_unregister_handler(sde_enc->input_handler);
+		sde_enc->input_handler_registered = false;
+	}
 
 	/*
 	 * For primary command mode and video mode encoders, execute the
