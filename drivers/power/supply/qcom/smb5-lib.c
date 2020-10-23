@@ -10093,7 +10093,7 @@ static void op_chek_apsd_done_work(struct work_struct *work)
 			op_check_apsd_work.work);
 	union power_supply_propval vbus_val;
 	int rc;
-	const struct apsd_result *apsd_result;
+	const struct apsd_result *apsd_result = NULL;
 
 	pr_debug("chg->ck_apsd_count=%d\n", chg->ck_apsd_count);
 	if (chg->pd_active) {
@@ -10279,7 +10279,7 @@ static int update_adapter_sid(unsigned int sid)
 
 static void op_otg_icl_contrl(struct smb_charger *chg)
 {
-	int cap, rc;
+	int cap, rc = 0;
 	static int icl_pre, icl;
 #ifdef OP_SWARP_SUPPORTED
 	union power_supply_propval pval = {0, };
