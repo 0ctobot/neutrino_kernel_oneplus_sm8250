@@ -1,0 +1,5 @@
+config HOUSTON
+	default n
+	bool "to collect system-wide and pmu data"
+	help
+	 Realtime temperature monitor
