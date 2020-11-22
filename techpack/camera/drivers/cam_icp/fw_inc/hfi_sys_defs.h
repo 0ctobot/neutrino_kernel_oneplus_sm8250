@@ -224,6 +224,10 @@
 
 #define HFI_DEV_VERSION_MAX      0x5
 
+/* Hang dump settings */
+#define HFI_SET_HANG_DUMP_ALWAYS     0x2
+#define HFI_SET_HANG_DUMP_ON_FAILURE 0x1
+
 /**
  * start of sys command packet types
  * These commands are used to get system level information
