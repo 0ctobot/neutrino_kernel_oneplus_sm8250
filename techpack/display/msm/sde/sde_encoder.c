@@ -40,6 +40,12 @@
 #include "sde_hw_top.h"
 #include "sde_hw_qdss.h"
 
+#if defined(CONFIG_PXLW_IRIS)
+#include "iris/dsi_iris5_api.h"
+#elif defined(CONFIG_PXLW_SOFT_IRIS)
+#include "iris/dsi_iris5_api.h"
+#include "iris/dsi_iris5.h"
+#endif
 #define SDE_DEBUG_ENC(e, fmt, ...) SDE_DEBUG("enc%d " fmt,\
 		(e) ? (e)->base.base.id : -1, ##__VA_ARGS__)
 
@@ -82,6 +88,9 @@
 		((x) == SDE_RM_TOPOLOGY_DUALPIPE_3DMERGE) || \
 		((x) == SDE_RM_TOPOLOGY_DUALPIPE_3DMERGE_DSC))
 
+#define DSI_PANEL_SAMSUNG_S6E3HC2 0
+#define DSI_PANEL_SAMSUNG_S6E3FC2X01 1
+extern char dsi_panel_name;
 #define REQ_SEAMLESS_MODESET_LOCK(adj_mode, is_cmd_mode) \
 		(msm_is_mode_seamless_dms(adj_mode) || \
 		(msm_is_mode_seamless_dyn_clk(adj_mode) && \
@@ -284,6 +293,9 @@ struct sde_encoder_virt {
 	struct kthread_work input_event_work;
 	struct kthread_work esd_trigger_work;
 	struct input_handler *input_handler;
+#if defined(CONFIG_PXLW_IRIS)
+	struct kthread_work disable_autorefresh_work;
+#endif
 	struct msm_display_topology topology;
 	bool vblank_enabled;
 	bool idle_pc_restore;
@@ -2052,6 +2064,13 @@ static int _sde_encoder_update_rsc_client(
 		rsc_config->jitter_numer = mode_info->jitter_numer;
 		rsc_config->jitter_denom = mode_info->jitter_denom;
 		sde_enc->rsc_state_init = false;
+        //xiaoxiaohuan@OnePlus.MultiMediaService,2018/08/04, add for fingerprint
+        if (dsi_panel_name == DSI_PANEL_SAMSUNG_S6E3HC2) {
+			rsc_config->fps = 90;
+		}
+		else {
+			rsc_config->fps = mode_info->frame_rate;
+		}
 	}
 
 	if (rsc_state != SDE_RSC_IDLE_STATE && !sde_enc->rsc_state_init
@@ -4338,6 +4357,36 @@ void sde_encoder_trigger_kickoff_pending(struct drm_encoder *drm_enc)
 	sde_enc->idle_pc_restore = false;
 }
 
+/*kent.xie@MM.Display.LCD.Feature,2018-08-19 force enable dither on Fingerprint scene */
+extern bool sde_crtc_get_fingerprint_mode(struct drm_crtc_state *crtc_state);
+static bool
+_sde_encoder_setup_dither_for_onscreenfingerprint(struct sde_encoder_phys *phys,struct sde_hw_pingpong *hw_pp,
+ void *dither_cfg, int len)
+{
+ struct drm_encoder *drm_enc = phys->parent;
+ struct drm_msm_dither dither;
+
+ if (!drm_enc || !drm_enc->crtc)
+ return -EFAULT;
+
+ if (!sde_crtc_get_fingerprint_mode(drm_enc->crtc->state))
+ return -EINVAL;
+
+ if (len != sizeof(dither))
+ return -EINVAL;
+
+ memcpy(&dither, dither_cfg, len);
+ dither.c0_bitdepth = 8;
+ dither.c1_bitdepth = 8;
+ dither.c2_bitdepth = 8;
+ dither.c3_bitdepth = 8;
+ dither.temporal_en = 1;
+
+ phys->hw_pp->ops.setup_dither(hw_pp, &dither, len);
+
+ return 0;
+}
+
 static void _sde_encoder_setup_dither(struct sde_encoder_phys *phys)
 {
 	void *dither_cfg;
@@ -4376,6 +4425,8 @@ static void _sde_encoder_setup_dither(struct sde_encoder_phys *phys)
 		for (i = 0; i < MAX_CHANNELS_PER_ENC; i++) {
 			hw_pp = sde_enc->hw_pp[i];
 			if (hw_pp) {
+              /*kent.xie@MM.Display.LCD.Feature,2018-08-19 force enable dither on Fingerprint scene */
+              if (_sde_encoder_setup_dither_for_onscreenfingerprint(phys,hw_pp, dither_cfg, len))
 				phys->hw_pp->ops.setup_dither(hw_pp, dither_cfg,
 								len);
 			}
@@ -4738,6 +4789,7 @@ void sde_encoder_needs_hw_reset(struct drm_encoder *drm_enc)
 	}
 }
 
+extern int sde_connector_update_backlight(struct drm_connector *conn);
 int sde_encoder_prepare_for_kickoff(struct drm_encoder *drm_enc,
 		struct sde_encoder_kickoff_params *params)
 {
@@ -4763,6 +4815,10 @@ int sde_encoder_prepare_for_kickoff(struct drm_encoder *drm_enc,
 
 	SDE_DEBUG_ENC(sde_enc, "\n");
 	SDE_EVT32(DRMID(drm_enc));
+
+    /*Kent.xie@MM.Display.LCD,2019-03-29 add for dc backlight */
+	if (sde_enc->cur_master  && (!strcmp(sde_enc->cur_master->connector->name, "DSI-1")))
+		sde_connector_update_backlight(sde_enc->cur_master->connector);
 
 	is_cmd_mode = sde_encoder_check_curr_mode(drm_enc,
 				MSM_DISPLAY_CMD_MODE);
@@ -4811,6 +4867,14 @@ int sde_encoder_prepare_for_kickoff(struct drm_encoder *drm_enc,
 	if (needs_hw_reset)
 		sde_encoder_needs_hw_reset(drm_enc);
 
+#if defined(CONFIG_PXLW_IRIS)
+	iris_sde_prepare_for_kickoff(sde_enc->num_phys_encs,
+			sde_enc->phys_encs[0]);
+
+#elif defined(CONFIG_PXLW_SOFT_IRIS)
+	if (sde_enc->num_phys_encs > 0)
+		iris_sync_panel_brightness(1, sde_enc->phys_encs[0]);
+#endif
 	_sde_encoder_update_master(drm_enc, params);
 
 	_sde_encoder_update_roi(drm_enc);
@@ -4906,6 +4970,13 @@ void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error)
 	if (is_error)
 		_sde_encoder_reset_ctl_hw(drm_enc);
 
+#if defined(CONFIG_PXLW_IRIS)
+	iris_sde_encoder_kickoff(sde_enc->num_phys_encs,
+			sde_enc->phys_encs[0]);
+#elif defined(CONFIG_PXLW_SOFT_IRIS)
+	if (sde_enc->num_phys_encs > 0)
+		iris_sync_panel_brightness(2, sde_enc->phys_encs[0]);
+#endif
 	/* All phys encs are ready to go, trigger the kickoff */
 	_sde_encoder_kickoff_phys(sde_enc);
 
@@ -4915,6 +4986,10 @@ void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error)
 		if (phys && phys->ops.handle_post_kickoff)
 			phys->ops.handle_post_kickoff(phys);
 	}
+#if defined(CONFIG_PXLW_IRIS) || defined(CONFIG_PXLW_SOFT_IRIS)
+	iris_sde_encoder_sync_panel_brightness(sde_enc->num_phys_encs,
+			sde_enc->phys_encs[0]);
+#endif
 
 	if (sde_enc->disp_info.intf_type == DRM_MODE_CONNECTOR_DSI &&
 			!_sde_encoder_wakeup_time(drm_enc, &wakeup_time)) {
@@ -5622,6 +5697,9 @@ static const struct drm_encoder_funcs sde_encoder_funcs = {
 		.early_unregister = sde_encoder_early_unregister,
 };
 
+#if defined(CONFIG_PXLW_IRIS)
+static void sde_encoder_disable_autorefresh_work_handler(struct kthread_work *work);
+#endif
 struct drm_encoder *sde_encoder_init_with_ops(
 		struct drm_device *dev,
 		struct msm_display_info *disp_info,
@@ -5703,6 +5781,11 @@ struct drm_encoder *sde_encoder_init_with_ops(
 
 	kthread_init_work(&sde_enc->esd_trigger_work,
 			sde_encoder_esd_trigger_work_handler);
+#if defined(CONFIG_PXLW_IRIS)
+	if (iris_is_chip_supported())
+		kthread_init_work(&sde_enc->disable_autorefresh_work,
+			sde_encoder_disable_autorefresh_work_handler);
+#endif
 
 	memcpy(&sde_enc->disp_info, disp_info, sizeof(*disp_info));
 
@@ -5772,6 +5855,10 @@ int sde_encoder_wait_for_event(struct drm_encoder *drm_enc,
 				return ret;
 		}
 	}
+#if defined(CONFIG_PXLW_IRIS) || defined(CONFIG_PXLW_SOFT_IRIS)
+	iris_sde_encoder_wait_for_event(sde_enc->num_phys_encs,
+			sde_enc->phys_encs[0], event);
+#endif
 
 	return ret;
 }
@@ -6180,3 +6267,79 @@ void sde_encoder_recovery_events_handler(struct drm_encoder *encoder,
 	sde_enc = to_sde_encoder_virt(encoder);
 	sde_enc->recovery_events_enabled = enabled;
 }
+
+#if defined(CONFIG_PXLW_IRIS)
+void sde_encoder_rc_lock(struct drm_encoder *drm_enc)
+{
+	struct sde_encoder_virt *sde_enc;
+
+	if (!drm_enc || !drm_enc->dev || !drm_enc->dev->dev_private) {
+		SDE_ERROR("invalid encoder\n");
+		return;
+	}
+	sde_enc = to_sde_encoder_virt(drm_enc);
+	mutex_lock(&sde_enc->rc_lock);
+}
+
+void sde_encoder_rc_unlock(struct drm_encoder *drm_enc)
+{
+	struct sde_encoder_virt *sde_enc;
+
+	if (!drm_enc || !drm_enc->dev || !drm_enc->dev->dev_private) {
+		SDE_ERROR("invalid encoder\n");
+		return;
+	}
+	sde_enc = to_sde_encoder_virt(drm_enc);
+	mutex_unlock(&sde_enc->rc_lock);
+}
+
+void sde_encoder_disable_autorefresh_handler(struct drm_encoder *drm_enc)
+{
+	struct sde_encoder_virt *sde_enc;
+	struct msm_drm_private *priv;
+	struct msm_drm_thread *event_thread;
+
+	if (!drm_enc || !drm_enc->dev || !drm_enc->dev->dev_private) {
+		SDE_ERROR("invalid encoder parameters\n");
+		return;
+	}
+
+	sde_enc = to_sde_encoder_virt(drm_enc);
+	priv = drm_enc->dev->dev_private;
+	if (!sde_enc->crtc) {
+		SDE_ERROR("invalid crtc");
+		return;
+	}
+
+	if (sde_enc->crtc->index >= ARRAY_SIZE(priv->event_thread)) {
+		SDE_ERROR("invalid crtc index:%u\n",
+				sde_enc->crtc->index);
+		return;
+	}
+	event_thread = &priv->event_thread[sde_enc->crtc->index];
+	if (!event_thread) {
+		SDE_ERROR("event_thread not found for crtc:%d\n",
+				sde_enc->crtc->index);
+		return;
+	}
+
+	kthread_queue_work(&event_thread->worker,
+				&sde_enc->disable_autorefresh_work);
+}
+
+static void sde_encoder_disable_autorefresh_work_handler(struct kthread_work *work)
+{
+	// FIXME: add it in lightup.c
+	iris_inc_osd_irq_cnt();
+}
+
+bool sde_encoder_is_disabled(struct drm_encoder *drm_enc)
+{
+	struct sde_encoder_virt *sde_enc;
+	struct sde_encoder_phys *phys;
+
+	sde_enc = to_sde_encoder_virt(drm_enc);
+	phys = sde_enc->phys_encs[0];
+	return (phys->enable_state == SDE_ENC_DISABLED);
+}
+#endif

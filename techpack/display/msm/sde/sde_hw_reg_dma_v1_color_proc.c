@@ -976,6 +976,7 @@ static void _dspp_igcv31_off(struct sde_hw_dspp *ctx, void *cfg)
 		DRM_ERROR("failed to kick off ret %d\n", rc);
 }
 
+extern int op_dither_enable;
 void reg_dmav1_setup_dspp_igcv31(struct sde_hw_dspp *ctx, void *cfg)
 {
 	struct drm_msm_igc_lut *lut_cfg;
@@ -985,7 +986,7 @@ void reg_dmav1_setup_dspp_igcv31(struct sde_hw_dspp *ctx, void *cfg)
 	struct sde_reg_dma_setup_ops_cfg dma_write_cfg;
 	struct sde_hw_dspp *dspp_list[DSPP_MAX];
 	int rc, i = 0, j = 0;
-	u32 *addr[IGC_TBL_NUM];
+	u32 *addr[IGC_TBL_NUM], *data;
 	u32 offset = 0;
 	u32 reg;
 	u32 index, num_of_mixers, dspp_sel, blk = 0;
@@ -1045,6 +1046,12 @@ void reg_dmav1_setup_dspp_igcv31(struct sde_hw_dspp *ctx, void *cfg)
 	addr[0] = lut_cfg->c0;
 	addr[1] = lut_cfg->c1;
 	addr[2] = lut_cfg->c2;
+	data = kzalloc((IGC_TBL_LEN + 1) * sizeof(u32), GFP_KERNEL);
+	if (!data) {
+		DRM_ERROR("unable to allocate buffer\n");
+		return;
+	}
+
 	for (i = 0; i < IGC_TBL_NUM; i++) {
 		offset = IGC_C0_OFF + (i * sizeof(u32));
 
@@ -1055,16 +1062,20 @@ void reg_dmav1_setup_dspp_igcv31(struct sde_hw_dspp *ctx, void *cfg)
 				addr[i][j] |= IGC_INDEX_UPDATE;
 		}
 
-		REG_DMA_SETUP_OPS(dma_write_cfg, offset, addr[i],
-			IGC_TBL_LEN * sizeof(u32),
+		memcpy(data, addr[i], IGC_TBL_LEN * sizeof(u32));
+		data[IGC_TBL_LEN] = data[IGC_TBL_LEN - 1];
+		REG_DMA_SETUP_OPS(dma_write_cfg, offset, data,
+			(IGC_TBL_LEN + 1) * sizeof(u32),
 			REG_BLK_WRITE_INC, 0, 0, 0);
 		rc = dma_ops->setup_payload(&dma_write_cfg);
 		if (rc) {
 			DRM_ERROR("lut write failed ret %d\n", rc);
+			kfree(data);
 			return;
 		}
 	}
 
+	kfree(data);
 	REG_DMA_INIT_OPS(dma_write_cfg, blk, IGC, dspp_buf[IGC][ctx->idx]);
 
 	REG_DMA_SETUP_OPS(dma_write_cfg, 0, NULL, 0, HW_BLK_SELECT, 0, 0, 0);
@@ -1075,8 +1086,14 @@ void reg_dmav1_setup_dspp_igcv31(struct sde_hw_dspp *ctx, void *cfg)
 	}
 
 	if (lut_cfg->flags & IGC_DITHER_ENABLE) {
+	if (op_dither_enable==1){
 		reg = lut_cfg->strength & IGC_DITHER_DATA_MASK;
-		REG_DMA_SETUP_OPS(dma_write_cfg,
+		reg=6;
+	}
+	else{
+          reg =0;
+	}
+          REG_DMA_SETUP_OPS(dma_write_cfg,
 			ctx->cap->sblk->igc.base + IGC_DITHER_OFF,
 			&reg, sizeof(reg), REG_SINGLE_WRITE, 0, 0, 0);
 		rc = dma_ops->setup_payload(&dma_write_cfg);
@@ -1086,7 +1103,13 @@ void reg_dmav1_setup_dspp_igcv31(struct sde_hw_dspp *ctx, void *cfg)
 		}
 	}
 
-	reg = IGC_EN;
+	if (op_dither_enable==1){
+          reg = IGC_EN;
+	}
+	else{
+          reg = IGC_EN|BIT(1);
+	}
+
 	REG_DMA_SETUP_OPS(dma_write_cfg,
 		ctx->cap->sblk->igc.base + IGC_OPMODE_OFF,
 		&reg, sizeof(reg), REG_SINGLE_WRITE, 0, 0, 0);

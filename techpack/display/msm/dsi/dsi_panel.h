@@ -28,6 +28,24 @@
 
 #define DSI_MODE_MAX 32
 
+#define EVT2_113MHZ_OSC 0x99
+#define PVT_113MHZ_OSC 0x10
+#define PVT_113MHZ_OSC_XTALK 0x11
+
+#define GAMMA_READ_SUCCESS 1
+#define GAMMA_READ_ERROR 0
+
+extern u32 mode_fps;
+extern int gamma_read_flag;
+extern int tp_1v8_power;
+extern char dimming_gamma_60hz[30];
+extern char dimming_gamma_120hz[15];
+
+enum dsi_gamma_cmd_set_type {
+	DSI_GAMMA_CMD_SET_SWITCH_60HZ = 0,
+	DSI_GAMMA_CMD_SET_SWITCH_90HZ,
+	DSI_GAMMA_CMD_SET_MAX
+};
 /*
  * Defining custom dsi msg flag,
  * continued from drm_mipi_dsi.h
@@ -122,6 +140,9 @@ struct dsi_backlight_config {
 	bool pwm_enabled;
 	u32 pwm_period_usecs;
 
+	bool bl_high2bit;
+	u32 bl_def_val;
+
 	/* WLED params */
 	struct led_trigger *wled;
 	struct backlight_device *raw_bd;
@@ -198,6 +219,80 @@ struct dsi_panel {
 
 	struct dsi_parser_utils utils;
 
+	char buf_id[32];
+	int panel_year;
+	int panel_mon;
+	int panel_day;
+	int panel_hour;
+	int panel_min;
+	int panel_sec;
+	int panel_msec;
+	int panel_msec_int;
+	int panel_msec_rem;
+	int panel_year_index;
+	int panel_mon_index;
+	int panel_day_index;
+	int panel_hour_index;
+	int panel_min_index;
+	int panel_sec_index;
+	int panel_msec_high_index;
+	int panel_msec_low_index;
+	u64 panel_serial_number;
+	int panel_code_info;
+	int panel_stage_info;
+	int panel_production_info;
+	int panel_ic_v;
+	char buf_select[10];
+	int panel_tool;
+	int ddic_x;
+	int ddic_y;
+	int ddic_check_info;
+
+	int hbm_backlight;
+	int hbm_brightness;
+	int hbm_mode;
+	bool is_hbm_enabled;
+	int op_force_screenfp;
+	bool dim_status;
+
+	int aod_mode;
+	int aod_status;
+	int aod_curr_mode;
+	int aod_disable;
+
+	int seed_lp_mode;
+	int acl_mode;
+	int acl_cmd_index;
+	int acl_mode_index;
+	int srgb_mode;
+	int dci_p3_mode;
+	int night_mode;
+	int oneplus_mode;
+	int adaption_mode;
+	int naive_display_p3_mode;
+	int naive_display_wide_color_mode;
+	int naive_display_srgb_color_mode;
+	int naive_display_loading_effect_mode;
+	int naive_display_customer_srgb_mode;
+	int naive_display_customer_p3_mode;
+	int mca_setting_mode;
+	int dimming_setting_mode;
+	struct delayed_work gamma_read_work;
+
+	int status_value;
+	int panel_mismatch_check;
+	int panel_mismatch;
+	bool panel_switch_status;
+	bool need_power_on_backlight;
+
+	int poc;
+	int vddr_gpio;
+	int vddd_gpio;
+	int tp1v8_gpio;
+	int err_flag_gpio;
+	bool is_err_flag_irq_enabled;
+	bool err_flag_status;
+
 	bool lp11_init;
 	bool ulps_feature_enabled;
 	bool ulps_suspend_enabled;
@@ -213,9 +308,12 @@ struct dsi_panel {
 	enum dsi_dms_mode dms_mode;
 
 	bool sync_broadcast_en;
+	int power_mode;
 
 	int panel_test_gpio;
-	int power_mode;
+#if defined(CONFIG_PXLW_IRIS)
+	bool is_secondary;
+#endif
 	enum dsi_panel_physical_type panel_type;
 };
 
@@ -333,8 +431,37 @@ struct dsi_panel *dsi_panel_ext_bridge_get(struct device *parent,
 int dsi_panel_parse_esd_reg_read_configs(struct dsi_panel *panel);
 
 void dsi_panel_ext_bridge_put(struct dsi_panel *panel);
-
+int dsi_panel_set_hbm_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_acl_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_hbm_brightness(struct dsi_panel *panel, int level);
+int dsi_panel_op_set_hbm_mode(struct dsi_panel *panel, int level);
 void dsi_panel_calc_dsi_transfer_time(struct dsi_host_common_cfg *config,
 		struct dsi_display_mode *mode, u32 frame_threshold_us);
-
+extern int drm_panel_notifier_call_chain(struct drm_panel *panel,
+	unsigned long val, void *v);
+int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_dci_p3_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_night_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_native_display_p3_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_native_display_wide_color_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_native_display_srgb_color_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_native_loading_effect_mode(struct dsi_panel *panel, int level);
+int dsi_panel_gamma_read_address_setting(struct dsi_panel *panel, u16 read_number);
+int dsi_panel_tx_cmd_set(struct dsi_panel *panel, enum dsi_cmd_set_type type);
+int dsi_panel_parse_gamma_cmd_sets(void);
+int dsi_panel_tx_gamma_cmd_set(struct dsi_panel *panel, enum dsi_gamma_cmd_set_type type);
+extern int mipi_dsi_dcs_write_c1(struct mipi_dsi_device *dsi, u16 read_number);
+int dsi_panel_update_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
+					enum dsi_cmd_set_type type, const char *data, unsigned int length);
+int dsi_panel_send_dsi_panel_command(struct dsi_panel *panel);
+int dsi_panel_update_dsi_seed_command(struct dsi_cmd_desc *cmds,
+					enum dsi_cmd_set_type type, const char *data);
+int dsi_panel_send_dsi_seed_command(struct dsi_panel *panel);
+int dsi_panel_set_customer_srgb_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_customer_p3_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_seed_lp_mode(struct dsi_panel *panel, int seed_lp_level);
+int dsi_panel_set_mca_setting_mode(struct dsi_panel *panel, int mca_setting_mode);
+int dsi_panel_set_dimming_setting_mode(struct dsi_panel *panel, int dimming_setting_mode);
+void dsi_panel_update_gamma_change_write(void);
+int dsi_panel_dimming_gamma_write(struct dsi_panel *panel);
 #endif /* _DSI_PANEL_H_ */
