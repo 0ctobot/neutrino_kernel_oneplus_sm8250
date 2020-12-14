@@ -2719,6 +2719,7 @@ void	OIS_Pos_Correction_by_AF( UINT16	us_af_code )
 //********************************************************************************
 #define N 7  /* ƒf[ƒ^” */
 
+#if 0
 UINT8	CalcSetMizxAndLinearityData( mlLinearityValue *linval ,  mlMixingValue *mixval )
 {
 	int i;
@@ -2836,6 +2837,7 @@ TRACE("hy45xL  = %08X\n", mixval->hy45xL);
 	
 	return( ans ) ;															// CheckSum OK
 }
+#endif
 #endif
 
 #if USE_BOSCH

@@ -887,6 +887,7 @@ void	SetSinWavGenInt124( void )
  #define		ACT_THR			0x000003E8		// 20dB 10*100
  #define		ACT_MARGIN		0.75f			// 
  
+#if 0
 UINT8	TstActMov124( UINT8 UcDirSel )
 {
 	UINT8	UcRsltSts = 0;
@@ -1006,6 +1007,7 @@ UINT8	RunHea124( void )
 //TRACE("UcRst = %02x\n", UcRst ) ;
 	return( UcRst ) ;
 }
+#endif
 
 
 #if ((SELECT_VENDOR & 0x80 ) != 0x80)
@@ -1452,6 +1454,7 @@ const UINT8 PACT1Tbl124[] = { 0x20, 0xDF };
 const UINT8 PACT2Tbl124[] = { 0x26, 0xD9 };	/* ACT_45DEG */
 
 
+#if 0
 UINT8 SetAngleCorrection124( float DegreeGap, UINT8 SelectAct, UINT8 Arrangement )
 {
 	double OffsetAngle = 0.0f;
@@ -1514,6 +1517,7 @@ UINT8 SetAngleCorrection124( float DegreeGap, UINT8 SelectAct, UINT8 Arrangement
 	
 	return ( 0 );
 }
+#endif
 
 void	SetGyroCoef124( UINT8 UcCnvF )
 {
@@ -1641,6 +1645,7 @@ TRACE("SetGyroAccelCoef SelectAct 0x%x GyroPostion 0x%x\n", SelectAct, GyroPosti
 #define	FS4TIME	(UINT32)0x000119B3		// 18028.8 * 4
 #define	FRQOFST	(UINT32)0x0001D14A		// 80000000h / 18028.8
 
+#if 0
 UINT32	MeasGain124 ( UINT16	UcDirSel, UINT16	UsMeasFreq , UINT32 UlMesAmp )
 {
 	INT32			SlMeasureParameterA = 0, SlMeasureParameterB = 0;
@@ -1919,6 +1924,7 @@ void	SetLinearityParameter( void )
 	RamWrite32A( GYRO_RAM_GYRO_Switch , UlGyroSw );
 	
 }
+#endif
 
 //********************************************************************************
 // Function Name 	: CrosstalkCalculation
