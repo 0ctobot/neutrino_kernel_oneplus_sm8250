@@ -4925,7 +4925,7 @@ kgsl_get_unmapped_area(struct file *file, unsigned long addr,
 	} else {
 		val = _get_svm_area(private, entry, addr, len, flags);
 		if (IS_ERR_VALUE(val)) {
-			struct vm_area_struct *vma;
+			struct vm_area_struct *vma __maybe_unused;
 			struct mm_struct *mm = current->mm;
 			unsigned long largest_gap_cpu = UINT_MAX;
 			unsigned long largest_gap_gpu = UINT_MAX;
