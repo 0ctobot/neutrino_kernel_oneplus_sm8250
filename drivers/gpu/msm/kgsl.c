@@ -4936,8 +4936,8 @@ kgsl_get_unmapped_area(struct file *file, unsigned long addr,
 					       current->mm->mmap_base, addr,
 					       pgoff, len, (int) val);
 
-			if (private->pid != current_pid) {
-				current_pid = private->pid;
+			if (pid_nr(private->pid) != current_pid) {
+				current_pid = pid_nr(private->pid);
 				kgsl_send_uevent_notify(device, current->group_leader->comm,
 					len, mm->total_vm, largest_gap_cpu, largest_gap_gpu);
 			}
