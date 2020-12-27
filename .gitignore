@@ -141,3 +141,6 @@ arch/arm64/boot/dts/vendor/
 
 # Tech package directories
 techpack/
+
+# Object directory
+out/
