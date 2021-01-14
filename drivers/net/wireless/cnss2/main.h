@@ -406,6 +406,7 @@ struct cnss_plat_data {
 	u8 set_wlaon_pwr_ctrl;
 	u8 fw_pcie_gen_switch;
 	u8 pcie_gen_speed;
+	int power_up_error;
 };
 
 int get_wifi_chain_mode(void);
