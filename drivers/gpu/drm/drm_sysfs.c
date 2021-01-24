@@ -1036,7 +1036,7 @@ static ssize_t panel_serial_number_show(struct device *dev,
 	else if (ddic_check_info == 0)
 		ddic_check_result = "NG";
 
-		ret = scnprintf(buf, PAGE_SIZE,
+	ret = scnprintf(buf, PAGE_SIZE,
 		"%04d/%02d/%02d\n%02d:%02d:%02d:%03d.%01d\n%s\nID: %02X %02X %02X\nDDIC_Check_Result: %s\n",
 				panel_year, panel_mon, panel_day, panel_hour, panel_min,
 					panel_sec, panel_msec_int, panel_msec_rem, stage_string_info, panel_code_info,

@@ -3772,8 +3772,8 @@ enum tfa_error tfa_dev_set_state(struct tfa_device *tfa, enum tfa_state state)
 		break;
 	case TFA_STATE_INIT_CF:      /* coolflux HW access possible (~initcf) */
 								 /* Start with SBSL=0 to stay in initCF state */
-	if(!tfa->is_probus_device)
-		TFA_SET_BF(tfa, SBSL, 0);
+		if(!tfa->is_probus_device)
+			TFA_SET_BF(tfa, SBSL, 0);
 
 		/* We want to leave Wait4SrcSettings state for max2 */
 		if (tfa->tfa_family == 2)
@@ -3816,13 +3816,13 @@ enum tfa_error tfa_dev_set_state(struct tfa_device *tfa, enum tfa_state state)
 									* Disable MTP clock to protect memory.
 									* However in case of calibration wait for DSP! (This should be case only during calibration).
 									*/
-		if ((!tfa->is_probus_device) && TFA_GET_BF(tfa, MTPOTC) == 1 && tfa->tfa_family == 2) {
-			count = MTPEX_WAIT_NTRIES * 4; /* Calibration takes a lot of time */
-			while ((TFA_GET_BF(tfa, MTPEX) != 1) && count) {
-				msleep_interruptible(10);
-				count--;
-			}
+	if ((!tfa->is_probus_device) && TFA_GET_BF(tfa, MTPOTC) == 1 && tfa->tfa_family == 2) {
+		count = MTPEX_WAIT_NTRIES * 4; /* Calibration takes a lot of time */
+		while ((TFA_GET_BF(tfa, MTPEX) != 1) && count) {
+			msleep_interruptible(10);
+			count--;
 		}
+	}
   if (!tfa->is_probus_device)
 	{
 		err = (enum tfa_error)tfa98xx_faim_protect(tfa, 0);
@@ -3963,8 +3963,8 @@ enum tfa_error tfa_dev_mtp_set(struct tfa_device *tfa, enum tfa_mtp item, int va
 					TFA_SET_BF(tfa, R25CL, (uint16_t)value);
 				else
 				{
-				    if (tfa->is_probus_device)
-				        tfa2_manual_mtp_cpy(tfa, 0xf4, value, 2);
+					if (tfa->is_probus_device)
+						tfa2_manual_mtp_cpy(tfa, 0xf4, value, 2);
 					TFA_SET_BF(tfa, R25C, (uint16_t)value);
 				}
 				tfa98xx_key2(tfa, 1);

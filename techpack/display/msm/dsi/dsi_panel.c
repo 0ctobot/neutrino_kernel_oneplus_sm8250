@@ -768,7 +768,7 @@ error_disable_gpio:
 	if (gpio_is_valid(panel->bl_config.en_gpio))
 		gpio_set_value(panel->bl_config.en_gpio, 0);
 //error_disable_pinctrl:
-		(void)dsi_panel_set_pinctrl_state(panel, false);
+	(void)dsi_panel_set_pinctrl_state(panel, false);
 
 error_disable_vddd:
 	if (gpio_is_valid(panel->vddd_gpio))
@@ -1066,9 +1066,9 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 			}
 		}
 #if defined(CONFIG_PXLW_IRIS)
-	if (iris_is_chip_supported() && iris_is_pt_mode(panel))
-		rc = iris_update_backlight(1, bl_lvl);
-	else
+		if (iris_is_chip_supported() && iris_is_pt_mode(panel))
+			rc = iris_update_backlight(1, bl_lvl);
+		else
 #endif
 		rc = mipi_dsi_dcs_set_display_brightness_samsung(dsi, bl_lvl);
 
@@ -5389,11 +5389,11 @@ int dsi_panel_enable(struct dsi_panel *panel)
 		}
 	} else {
 #if defined(CONFIG_PXLW_IRIS)
-	if (iris_is_chip_supported())
-		rc = iris_enable(panel, &(panel->cur_mode->priv_info->cmd_sets[DSI_CMD_SET_ON]));
-	else
+		if (iris_is_chip_supported())
+			rc = iris_enable(panel, &(panel->cur_mode->priv_info->cmd_sets[DSI_CMD_SET_ON]));
+		else
 #endif
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_ON);
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_ON);
 		DSI_ERR("Send DSI_CMD_SET_ON cmds\n");
 	}
 	if (rc)
