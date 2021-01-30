@@ -1509,7 +1509,7 @@ static int mp2650_get_prop(struct power_supply *psy,
 {
 	struct mp2650_charger *chg = power_supply_get_drvdata(psy);
 	int rc = 0;
-	int val_mx;
+	int val_mx = 0;
 
 	if (!chg)
 		return -ENODEV;

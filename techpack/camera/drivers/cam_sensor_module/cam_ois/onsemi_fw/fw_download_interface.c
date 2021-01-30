@@ -1050,7 +1050,7 @@ int OISPollThread128(void *arg)
 	uint64_t estimate_QTimer = 0;	// This is the QTimer interval between two sample
 	uint32_t vaild_cnt = 0;
 	uint32_t is_add_Offset = 0;
-	uint32_t offset_cnt;
+	uint32_t offset_cnt = 0;
 	mutex_lock(&(o_ctrl->ois_hall_data_mutex));
 	kfifo_reset(&(o_ctrl->ois_hall_data_fifo));
 	kfifo_reset(&(o_ctrl->ois_hall_data_fifoV2));

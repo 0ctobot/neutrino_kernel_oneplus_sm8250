@@ -24003,7 +24003,7 @@ static const int mi2s_rx_vi_fb_tx_value[] = {
 };
 
 #ifdef CONFIG_SND_SOC_TFA9874_FOR_DAVI
-static const int const tert_mi2s_rx_vi_fb_tx_value[] = {
+static const int tert_mi2s_rx_vi_fb_tx_value[] = {
 	MSM_BACKEND_DAI_MAX, MSM_BACKEND_DAI_TERTIARY_MI2S_TX
 };
 #endif

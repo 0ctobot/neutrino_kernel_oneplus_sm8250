@@ -2076,7 +2076,7 @@ static int rt5125_fw_update(struct fastchg_device_info *chip)
 {
 	const u8 *data = dashchg_firmware_data;
 	s32 len = chip->dashchg_fw_ver_count;
-	u8 rwdata = 0, status, fwdata[DEFAULT_MAX_PAGELEN];
+	u8 rwdata = 0, status = 0, fwdata[DEFAULT_MAX_PAGELEN];
 	s32 elapsed, wr_len;
 	u32 fw_info;
 	int i, idx, retry, ret;
