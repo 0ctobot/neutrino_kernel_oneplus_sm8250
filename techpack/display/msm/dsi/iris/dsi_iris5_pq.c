@@ -2875,7 +2875,7 @@ static int32_t _iris_alloc_pq_init_space(struct iris_cfg *pcfg,
 	struct iris_pq_init_val *pinit_val = &pcfg->pq_init_val;
 
 	if (pdata == NULL || item_cnt == 0) {
-		IRIS_LOGE("%s(), invalide input, data: %p, size: %d", pdata, item_cnt);
+		IRIS_LOGE("%s(), invalide input, data: %p, size: %d", __func__, pdata, item_cnt);
 		return -EINVAL;
 	}
 

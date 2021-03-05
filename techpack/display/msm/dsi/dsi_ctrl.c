@@ -1370,7 +1370,7 @@ static void print_cmd_desc(struct dsi_ctrl *dsi_ctrl, const struct mipi_dsi_msg 
 	len += snprintf(buf + len, sizeof(buf) - len, "%02X ", (unsigned int)msg->flags);
 	/* Delay */
 	len += snprintf(buf + len, sizeof(buf) - len, "%02X ", msg->wait_ms);
-	len += snprintf(buf + len, sizeof(buf) - len, "%02X %02X ", msg->tx_len >> 8, msg->tx_len & 0x00FF);
+	len += snprintf(buf + len, sizeof(buf) - len, "%02lX %02lX ", msg->tx_len >> 8, msg->tx_len & 0x00FF);
 
 	/* Packet Payload */
 	for (i = 0 ; i < msg->tx_len ; i++) {

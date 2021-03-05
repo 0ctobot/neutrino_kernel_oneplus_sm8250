@@ -802,7 +802,7 @@ static int p9415_set_trx_enable(struct op_p9415_ic *chip, bool enable)
 	else
 		rc = p9415_config_interface(chip, 0x76, 0x00, 0xff);
 	if (rc)
-		pr_err("can't %s trx, rc=%d\n", rc, enable ? "enable" : "disable");
+		pr_err("can't %s trx, rc=%d\n", enable ? "enable" : "disable", rc);
 
 	return rc;
 }

@@ -325,7 +325,7 @@ static void dsi_phy_hw_dphy_enable(struct dsi_phy_hw *phy,
 	/* Alter PHY configurations if data rate less than 1.5GHZ*/
 	if (cfg->bit_clk_rate_hz <= 1500000000)
 		less_than_1500_mhz = true;
-	DSI_PHY_DBG(phy, "bit_clk_rate_hz = %d\n", cfg->bit_clk_rate_hz);
+	DSI_PHY_DBG(phy, "bit_clk_rate_hz = %lu\n", cfg->bit_clk_rate_hz);
 
 	if (phy->version == DSI_PHY_VERSION_4_1) {
 		vreg_ctrl_0 = less_than_1500_mhz ? 0x53 : 0x52;

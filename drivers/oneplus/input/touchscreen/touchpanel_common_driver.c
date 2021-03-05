@@ -5883,7 +5883,7 @@ static int reverse_charge_notifier_callback(struct notifier_block *self, unsigne
 		return -EINVAL;
 	}
 
-	TPD_INFO("%s event is %d\n", __func__, event);
+	TPD_INFO("%s event is %lu\n", __func__, event);
 	if (event == 1) {
 		mutex_lock(&ts->mutex);
 		ts->ts_ops->mode_switch(ts->chip_data, MODE_REVERSE_WIRELESS_CHARGE, 1);
@@ -5908,7 +5908,7 @@ static int tp_delta_print_notifier_callback(struct notifier_block *self, unsigne
 		return -EINVAL;
 	}
 
-	TPD_INFO("%s event is %d\n", __func__, event);
+	TPD_INFO("%s event is %lu\n", __func__, event);
 
 	mutex_lock(&ts->mutex);
 	ts->ts_ops->mode_switch(ts->chip_data, MODE_TP_DELTA_PRINT, 1);

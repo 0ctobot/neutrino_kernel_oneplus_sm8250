@@ -9279,7 +9279,7 @@ int dsi_display_get_gamma_para(struct dsi_display *dsi_display, struct dsi_panel
 	char gamma_para_backup[413] = {0};
 	int check_sum_60hz = 0;
 
-	DSI_ERR("start\n", __func__);
+	DSI_ERR("start %s()\n", __func__);
 
 	if (!panel || !panel->cur_mode)
 		return -EINVAL;
@@ -9790,7 +9790,7 @@ int dsi_display_get_serial_number(struct drm_connector *connector)
 	int panel_msec_int = 0;
 	int panel_msec_rem = 0;
 
-	DSI_DEBUG("start\n", __func__);
+	DSI_DEBUG("start %s()\n", __func__);
 
 	if ((connector == NULL) || (connector->encoder == NULL)
 		|| (connector->encoder->bridge == NULL))
@@ -11592,7 +11592,7 @@ static int dsi_display_get_mipi_dsi_msg(const struct mipi_dsi_msg *msg, char* bu
 	len += snprintf(buf + len, PAGE_SIZE - len, "%02X ", (unsigned int)msg->flags);
 	/* Delay */
 	len += snprintf(buf + len, PAGE_SIZE - len, "%02X ", msg->wait_ms);
-	len += snprintf(buf + len, PAGE_SIZE - len, "%02X %02X ", msg->tx_len >> 8, msg->tx_len & 0x00FF);
+	len += snprintf(buf + len, PAGE_SIZE - len, "%02lX %02lX ", msg->tx_len >> 8, msg->tx_len & 0x00FF);
 
 	/* Packet Payload */
 	for (i = 0 ; i < msg->tx_len ; i++) {
@@ -11951,7 +11951,7 @@ int dsi_display_get_reg_value(struct dsi_display *dsi_display, struct dsi_panel 
 error:
 	dsi_panel_release_panel_lock(panel);
 	dsi_display_cmd_engine_disable(dsi_display);
-	DSI_ERR("end\n", __func__);
+	DSI_ERR("end %s()\n", __func__);
 	return rc;
 }
 

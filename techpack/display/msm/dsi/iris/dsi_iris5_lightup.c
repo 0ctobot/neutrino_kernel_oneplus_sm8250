@@ -3568,7 +3568,7 @@ static ssize_t _iris_list_debug(struct file *file,
 	if (copy_from_user(buf, user_buf, count))
 		return -EFAULT;
 
-	if (sscanf(buf, "%x %x %x %x", &ip, &opt_id, &pos, &value) != 4)
+	if (sscanf(buf, "%s %s %x %x", &ip, &opt_id, &pos, &value) != 4)
 		return -EINVAL;
 
 	payload = iris_get_ipopt_payload_data(ip, opt_id, 2);

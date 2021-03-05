@@ -56,7 +56,7 @@ static ssize_t regulator_demo_state_write(struct file *file, const char __user *
 		return count;
 	}
 
-	snprintf(buf, sizeof(buf), "%d", &regulator_demo_value);
+	snprintf(buf, sizeof(buf), "%d", regulator_demo_value);
 	printk("%s before(%d),current(%d) \n",__func__,regulator_demo_data->regulator_demo_value,regulator_demo_value);
 	regulator_demo_data->regulator_demo_value=regulator_demo_value;
 
