@@ -2522,9 +2522,6 @@ static int fsg_set_alt(struct usb_function *f, unsigned intf, unsigned alt)
 	int rc;
 	struct fsg_dev *fsg = fsg_from_func(f);
 
-	/* prevents usb LPM until thread runs to completion */
-	usb_gadget_autopm_get_async(fsg->common->gadget);
-
 	/* Enable the endpoints */
 
 	rc = config_ep_by_speed(fsg->common->gadget, &(fsg->function),
