@@ -1816,7 +1816,7 @@ urandom_read(struct file *file, char __user *buf, size_t nbytes, loff_t *ppos)
 	return urandom_read_nowarn(file, buf, nbytes, ppos);
 }
 
-static ssize_t
+static ssize_t __maybe_unused
 random_read(struct file *file, char __user *buf, size_t nbytes, loff_t *ppos)
 {
 	int ret;
@@ -1946,7 +1946,7 @@ static int random_fasync(int fd, struct file *filp, int on)
 }
 
 const struct file_operations random_fops = {
-	.read  = random_read,
+	.read  = urandom_read,
 	.write = random_write,
 	.poll  = random_poll,
 	.unlocked_ioctl = random_ioctl,
