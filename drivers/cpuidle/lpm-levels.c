@@ -95,15 +95,6 @@ static void cluster_prepare(struct lpm_cluster *cluster,
 static bool print_parsed_dt;
 module_param_named(print_parsed_dt, print_parsed_dt, bool, 0664);
 
-static bool sleep_disabled;
-module_param_named(sleep_disabled, sleep_disabled, bool, 0664);
-
-void msm_cpuidle_set_sleep_disable(bool disable)
-{
-	sleep_disabled = disable;
-	pr_info("%s:sleep_disabled=%d\n", __func__, disable);
-}
-
 /**
  * msm_cpuidle_get_deep_idle_latency - Get deep idle latency value
  *
@@ -603,9 +594,6 @@ static inline bool lpm_disallowed(s64 sleep_us, int cpu, struct lpm_cpu *pm_cpu)
 	if (cpu_isolated(cpu))
 		goto out;
 
-	if (sleep_disabled)
-		return true;
-
 	bias_time = sched_lpm_disallowed_time(cpu);
 	if (bias_time) {
 		pm_cpu->bias = bias_time;
@@ -667,7 +655,7 @@ static int cpu_power_select(struct cpuidle_device *dev,
 		min_residency = pwr_params->min_residency;
 		max_residency = pwr_params->max_residency;
 
-		if (latency_us < lvl_latency_us)
+		if (latency_us <= lvl_latency_us)
 			break;
 
 		calculate_next_wakeup(&next_wakeup_us, next_event_us,
@@ -1004,7 +992,7 @@ static int cluster_select(struct lpm_cluster *cluster, bool from_idle,
 					&level->num_cpu_votes))
 			continue;
 
-		if (from_idle && latency_us < pwr_params->exit_latency)
+		if (from_idle && latency_us <= pwr_params->exit_latency)
 			break;
 
 		if (sleep_us < (pwr_params->exit_latency +
@@ -1408,7 +1396,9 @@ static int lpm_cpuidle_enter(struct cpuidle_device *dev,
 	if (need_resched())
 		goto exit;
 
+	cpuidle_set_idle_cpu(dev->cpu);
 	success = psci_enter_sleep(cpu, idx, true);
+	cpuidle_clear_idle_cpu(dev->cpu);
 
 exit:
 	end_time = ktime_to_ns(ktime_get());

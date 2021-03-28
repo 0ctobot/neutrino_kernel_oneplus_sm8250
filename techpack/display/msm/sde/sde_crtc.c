@@ -27,6 +27,9 @@
 #include <drm/drm_flip_work.h>
 #include <linux/clk/qcom.h>
 
+#include <linux/cpu_input_boost.h>
+#include <linux/devfreq_boost.h>
+
 #include "sde_kms.h"
 #include "sde_hw_lm.h"
 #include "sde_hw_ctl.h"
@@ -1406,7 +1409,6 @@ static void _sde_crtc_blend_setup_mixer(struct drm_crtc *crtc,
 	lm = mixer->hw_lm;
 	stage_cfg = &sde_crtc->stage_cfg;
 	cstate = to_sde_crtc_state(crtc->state);
-	memset(pstates, 0, SDE_PSTATES_MAX * sizeof(struct plane_state));
 
 	drm_atomic_crtc_for_each_plane(plane, crtc) {
 		state = plane->state;
@@ -5140,6 +5142,12 @@ static int sde_crtc_onscreenfinger_atomic_check(struct sde_crtc_state *cstate,
 	else
 		display->panel->dim_status = false;
 
+	if (fppressed_index > 0 || fp_mode == 1) {
+		cpu_input_boost_kick_max(500);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 500);
+	}
+
 	if(aod_index <0){
 		oneplus_aod_hid = 0;
 		aod_layer_hide = 0;
@@ -5546,11 +5554,11 @@ static int sde_crtc_atomic_check(struct drm_crtc *crtc,
 {
 	struct drm_device *dev;
 	struct sde_crtc *sde_crtc;
-	struct plane_state pstates[SDE_PSTATES_MAX] __aligned(8);
+	struct plane_state pstates[SDE_PSTATES_MAX];
 	struct sde_crtc_state *cstate;
 	struct drm_display_mode *mode;
 	int rc = 0;
-	struct sde_multirect_plane_states multirect_plane[SDE_MULTIRECT_PLANE_MAX] __aligned(8);
+	struct sde_multirect_plane_states multirect_plane[SDE_MULTIRECT_PLANE_MAX];
 	struct drm_connector *conn;
 	struct drm_connector_list_iter conn_iter;
 
@@ -5569,9 +5577,6 @@ static int sde_crtc_atomic_check(struct drm_crtc *crtc,
 		goto end;
 	}
 
-	memset(pstates, 0, sizeof(pstates));
-	memset(multirect_plane, 0, sizeof(multirect_plane));
-	
 	mode = &state->adjusted_mode;
 	SDE_DEBUG("%s: check", sde_crtc->name);
 

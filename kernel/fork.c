@@ -95,6 +95,8 @@
 #include <linux/thread_info.h>
 #include <linux/cpufreq_times.h>
 #include <linux/scs.h>
+#include <linux/cpu_input_boost.h>
+#include <linux/devfreq_boost.h>
 #include <linux/simple_lmk.h>
 
 #include <asm/pgtable.h>
@@ -381,7 +383,7 @@ static void account_kernel_stack(struct task_struct *tsk, int account)
 	}
 }
 
-static void release_task_stack(struct task_struct *tsk)
+void release_task_stack(struct task_struct *tsk)
 {
 	if (WARN_ON(tsk->state != TASK_DEAD))
 		return;  /* Better to leak the stack than to free prematurely */
@@ -2378,6 +2380,13 @@ long _do_fork(unsigned long clone_flags,
 	struct task_struct *p;
 	int trace = 0;
 	long nr;
+
+	/* Boost CPU to the max for 50 ms when userspace launches an app */
+	if (is_zygote_pid(current->pid)) {
+		cpu_input_boost_kick_max(50);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 50);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 50);
+	}
 
 	/*
 	 * Determine whether and which event to report to ptracer.  When

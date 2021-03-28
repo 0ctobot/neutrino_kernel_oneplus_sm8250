@@ -180,6 +180,34 @@ config ARM64
 	select SYSCTL_EXCEPTION_TRACE
 	select THREAD_INFO_IN_TASK
 	select ARCH_SUPPORTS_SPECULATIVE_PAGE_FAULT
+	select ARCH_INLINE_SPIN_TRYLOCK
+	select ARCH_INLINE_SPIN_TRYLOCK_BH
+	select ARCH_INLINE_SPIN_LOCK
+	select ARCH_INLINE_SPIN_LOCK_BH
+	select ARCH_INLINE_SPIN_LOCK_IRQ
+	select ARCH_INLINE_SPIN_LOCK_IRQSAVE
+	select ARCH_INLINE_SPIN_UNLOCK
+	select ARCH_INLINE_SPIN_UNLOCK_BH
+	select ARCH_INLINE_SPIN_UNLOCK_IRQ
+	select ARCH_INLINE_SPIN_UNLOCK_IRQRESTORE
+	select ARCH_INLINE_READ_TRYLOCK
+	select ARCH_INLINE_READ_LOCK
+	select ARCH_INLINE_READ_LOCK_BH
+	select ARCH_INLINE_READ_LOCK_IRQ
+	select ARCH_INLINE_READ_LOCK_IRQSAVE
+	select ARCH_INLINE_READ_UNLOCK
+	select ARCH_INLINE_READ_UNLOCK_BH
+	select ARCH_INLINE_READ_UNLOCK_IRQ
+	select ARCH_INLINE_READ_UNLOCK_IRQRESTORE
+	select ARCH_INLINE_WRITE_TRYLOCK
+	select ARCH_INLINE_WRITE_LOCK
+	select ARCH_INLINE_WRITE_LOCK_BH
+	select ARCH_INLINE_WRITE_LOCK_IRQ
+	select ARCH_INLINE_WRITE_LOCK_IRQSAVE
+	select ARCH_INLINE_WRITE_UNLOCK
+	select ARCH_INLINE_WRITE_UNLOCK_BH
+	select ARCH_INLINE_WRITE_UNLOCK_IRQ
+	select ARCH_INLINE_WRITE_UNLOCK_IRQRESTORE
 	help
 	  ARM 64-bit (AArch64) Linux support.
 
@@ -808,6 +836,27 @@ config NR_CPUS
 	range 2 4096
 	# These have to remain sorted largest to smallest
 	default "64"
+
+config LITTLE_CPU_MASK
+	int "Bitmask of available LITTLE CPUs"
+	help
+	  This is a bitmask specifying which of the CPUs are LITTLE in a
+	  heterogeneous system. Use 0 if you are unsure, which just results in
+	  this storing the bitmask of all available CPUs.
+
+config BIG_CPU_MASK
+	int "Bitmask of available big CPUs"
+	help
+	  This is a bitmask specifying which of the CPUs are big in a
+	  heterogeneous system. Use 0 if you are unsure, which just results in
+	  this storing the bitmask of all available CPUs.
+
+config PRIME_CPU_MASK
+	int "Bitmask of available prime CPUs"
+	help
+	  This is a bitmask specifying which of the CPUs are prime in a
+	  heterogeneous system. Use 0 if you are unsure, which just results in
+	  this storing the bitmask of all available CPUs.
 
 config HOTPLUG_CPU
 	bool "Support for hot-pluggable CPUs"

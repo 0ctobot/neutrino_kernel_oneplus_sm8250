@@ -61,8 +61,6 @@ struct kgsl_drawobj {
  * for easy access
  * @profile_index: Index to store the start/stop ticks in the kernel profiling
  * buffer
- * @submit_ticks: Variable to hold ticks at the time of
- *     command obj submit.
 
  */
 struct kgsl_drawobj_cmd {
@@ -77,7 +75,6 @@ struct kgsl_drawobj_cmd {
 	struct kgsl_mem_entry *profiling_buf_entry;
 	uint64_t profiling_buffer_gpuaddr;
 	unsigned int profile_index;
-	uint64_t submit_ticks;
 };
 
 /**
@@ -100,12 +97,6 @@ struct kgsl_drawobj_sync {
 	unsigned long timeout_jiffies;
 };
 
-#define KGSL_FENCE_NAME_LEN 74
-
-struct event_fence_info {
-	int num_fences;
-};
-
 /**
  * struct kgsl_drawobj_sync_event
  * @id: identifer (positiion within the pending bitmap)
@@ -126,7 +117,6 @@ struct kgsl_drawobj_sync_event {
 	unsigned int timestamp;
 	struct kgsl_sync_fence_cb *handle;
 	struct kgsl_device *device;
-	struct event_fence_info info;
 };
 
 /**
