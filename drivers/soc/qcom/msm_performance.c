@@ -57,6 +57,7 @@ static unsigned int curr_cap[CLUSTER_MAX];
 /*******************************sysfs start************************************/
 static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 {
+#if 0
 	int i, j, ntokens = 0;
 	unsigned int val, cpu;
 	const char *cp = buf;
@@ -109,6 +110,7 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 			cpumask_clear_cpu(j, limit_mask);
 	}
 	put_online_cpus();
+#endif
 
 	return 0;
 }
@@ -134,6 +136,7 @@ module_param_cb(cpu_min_freq, &param_ops_cpu_min_freq, NULL, 0644);
 
 static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 {
+#if 0
 	int i, j, ntokens = 0;
 	unsigned int val, cpu;
 	const char *cp = buf;
@@ -178,6 +181,7 @@ static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 			cpumask_clear_cpu(j, limit_mask);
 	}
 	put_online_cpus();
+#endif
 
 	return 0;
 }
@@ -414,81 +418,6 @@ static int init_events_group(void)
 
 	return 0;
 }
-
-static void nr_notify_userspace(struct work_struct *work)
-{
-	sysfs_notify(notify_kobj, NULL, "aggr_top_load");
-	sysfs_notify(notify_kobj, NULL, "aggr_big_nr");
-	sysfs_notify(notify_kobj, NULL, "top_load_cluster");
-	sysfs_notify(notify_kobj, NULL, "curr_cap_cluster");
-}
-
-static int msm_perf_core_ctl_notify(struct notifier_block *nb,
-					unsigned long unused,
-					void *data)
-{
-	static unsigned int tld, nrb, i;
-	static unsigned int top_ld[CLUSTER_MAX], curr_cp[CLUSTER_MAX];
-	static DECLARE_WORK(sysfs_notify_work, nr_notify_userspace);
-	struct core_ctl_notif_data *d = data;
-	int cluster = 0;
-
-	nrb += d->nr_big;
-	tld += d->coloc_load_pct;
-	for (cluster = 0; cluster < CLUSTER_MAX; cluster++) {
-		top_ld[cluster] += d->ta_util_pct[cluster];
-		curr_cp[cluster] += d->cur_cap_pct[cluster];
-	}
-	i++;
-	if (i == POLL_INT) {
-		aggr_big_nr = ((nrb%POLL_INT) ? 1 : 0) + nrb/POLL_INT;
-		aggr_top_load = tld/POLL_INT;
-		for (cluster = 0; cluster < CLUSTER_MAX; cluster++) {
-			top_load[cluster] = top_ld[cluster]/POLL_INT;
-			curr_cap[cluster] = curr_cp[cluster]/POLL_INT;
-			top_ld[cluster] = 0;
-			curr_cp[cluster] = 0;
-		}
-		//reset Counters
-		tld = 0;
-		nrb = 0;
-		i = 0;
-		schedule_work(&sysfs_notify_work);
-	}
-	return NOTIFY_OK;
-}
-
-static struct notifier_block msm_perf_nb = {
-	.notifier_call = msm_perf_core_ctl_notify
-};
-
-static bool core_ctl_register;
-static int set_core_ctl_register(const char *buf, const struct kernel_param *kp)
-{
-	int ret;
-	bool old_val = core_ctl_register;
-
-	ret = param_set_bool(buf, kp);
-	if (ret < 0)
-		return ret;
-
-	if (core_ctl_register == old_val)
-		return 0;
-
-	if (core_ctl_register)
-		core_ctl_notifier_register(&msm_perf_nb);
-	else
-		core_ctl_notifier_unregister(&msm_perf_nb);
-
-	return 0;
-}
-
-static const struct kernel_param_ops param_ops_cc_register = {
-	.set = set_core_ctl_register,
-	.get = param_get_bool,
-};
-module_param_cb(core_ctl_register, &param_ops_cc_register,
-		&core_ctl_register, 0644);
 
 static int __init msm_performance_init(void)
 {

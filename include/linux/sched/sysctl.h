@@ -78,6 +78,13 @@ sched_ravg_window_handler(struct ctl_table *table, int write,
 extern int sched_updown_migrate_handler(struct ctl_table *table,
 					int write, void __user *buffer,
 					size_t *lenp, loff_t *ppos);
+#else
+extern unsigned int sysctl_sched_boost;
+extern unsigned int sysctl_sched_min_task_util_for_boost;
+extern unsigned int sysctl_sched_min_task_util_for_colocation;
+extern unsigned int sysctl_sched_prefer_spread;
+static unsigned int sysctl_sched_busy_hyst_enable_cpus;
+static unsigned int sysctl_sched_busy_hyst;
 #endif
 
 #if defined(CONFIG_PREEMPTIRQ_EVENTS) || defined(CONFIG_PREEMPT_TRACER)
@@ -157,9 +164,13 @@ extern int sysctl_numa_balancing(struct ctl_table *table, int write,
 extern int sysctl_schedstats(struct ctl_table *table, int write,
 				 void __user *buffer, size_t *lenp,
 				 loff_t *ppos);
+
 #define LIB_PATH_LENGTH 512
 extern char sched_lib_name[LIB_PATH_LENGTH];
 extern unsigned int sched_lib_mask_force;
+extern int sysctl_sched_lib_name_handler(struct ctl_table *table, int write,
+					 void __user *buffer, size_t *lenp,
+					 loff_t *ppos);
 extern bool is_sched_lib_based_app(pid_t pid);
 
 #if defined(CONFIG_ENERGY_MODEL) && defined(CONFIG_CPU_FREQ_GOV_SCHEDUTIL)
