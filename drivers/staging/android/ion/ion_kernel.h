@@ -40,7 +40,7 @@ int ion_populate_vm_list(unsigned long flags, unsigned int *vm_list,
 static inline struct dma_buf *ion_alloc(size_t len, unsigned int heap_id_mask,
 					unsigned int flags)
 {
-	return -ENOMEM;
+	return ERR_PTR(-ENOMEM);
 }
 
 static inline unsigned int ion_get_flags_num_vm_elems(unsigned int flags)
