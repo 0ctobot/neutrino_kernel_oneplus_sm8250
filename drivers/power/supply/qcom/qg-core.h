@@ -206,6 +206,7 @@ struct qpnp_qg {
 	struct cycle_counter	*counter;
 	/* ttf */
 	struct ttf		*ttf;
+
 };
 
 struct ocv_all {

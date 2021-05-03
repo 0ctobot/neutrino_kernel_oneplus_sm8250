@@ -97,19 +97,19 @@ static inline bool _msm_seamless_for_conn(struct drm_connector *connector,
 		old_conn_state->crtc->state->connectors_changed)
 		return false;
 
-	if (msm_is_mode_seamless(&connector->encoder->crtc->state->mode))
+	if (msm_is_mode_seamless(&old_conn_state->crtc->state->mode))
 		return true;
 
 	if (msm_is_mode_seamless_vrr(
-			&connector->encoder->crtc->state->adjusted_mode))
+			&old_conn_state->crtc->state->adjusted_mode))
 		return true;
 
 	if (msm_is_mode_seamless_dyn_clk(
-			 &connector->encoder->crtc->state->adjusted_mode))
+			 &old_conn_state->crtc->state->adjusted_mode))
 		return true;
 
 	if (msm_is_mode_seamless_dms(
-			&connector->encoder->crtc->state->adjusted_mode))
+			&old_conn_state->crtc->state->adjusted_mode))
 		return true;
 
 	return false;

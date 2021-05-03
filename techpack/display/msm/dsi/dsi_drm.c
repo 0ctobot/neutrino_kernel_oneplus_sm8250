@@ -13,6 +13,7 @@
 #include "sde_trace.h"
 #include "sde_dbg.h"
 #include "sde_encoder.h"
+#include "sde_dbg.h"
 
 #define to_dsi_bridge(x)     container_of((x), struct dsi_bridge, base)
 #define to_dsi_state(x)      container_of((x), struct dsi_connector_state, base)

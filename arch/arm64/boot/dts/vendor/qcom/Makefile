@@ -10,7 +10,8 @@
                 instantnoodlev-overlay-t0.dtbo \
                 instantnoodlev-overlay-evt1.dtbo \
                 instantnoodlev-overlay-dvt.dtbo \
-                kebab-overlay.dtbo
+                kebab-overlay.dtbo \
+                lemonades-overlay.dtbo
 
 instantnoodlep-overlay-evb.dtbo-base := kona-v2.1.dtb
 instantnoodlep-overlay-t0.dtbo-base := kona-v2.1.dtb
@@ -26,6 +27,7 @@ instantnoodlev-overlay-evt1.dtbo-base := kona-v2.1.dtb
 instantnoodlev-overlay-dvt.dtbo-base := kona-v2.1.dtb
 
 kebab-overlay.dtbo-base := kona-v2.1.dtb
+lemonades-overlay.dtbo-base := kona-v2.1.dtb
 
 
 

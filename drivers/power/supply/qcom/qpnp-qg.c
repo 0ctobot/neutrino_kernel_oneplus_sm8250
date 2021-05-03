@@ -36,8 +36,16 @@
 #include "qg-soc.h"
 #include "qg-battery-profile.h"
 #include "qg-defs.h"
+#include <linux/proc_fs.h>
+
+#ifdef OEM_TARGET_PRODUCT_EBBA
+#include <linux/hardware_info.h>
+#define QCOMM_PMIC_TYPE    "pm7250b"
+#endif
 
 static int qg_debug_mask;
+
+static struct external_battery_gauge *external_fg;
 
 static int qg_esr_mod_count = 30;
 static ssize_t esr_mod_count_show(struct device *dev, struct device_attribute
@@ -59,6 +67,24 @@ static ssize_t esr_mod_count_store(struct device *dev,
 	return count;
 }
 static DEVICE_ATTR_RW(esr_mod_count);
+
+void external_battery_gauge_register(
+				struct external_battery_gauge *batt_gauge)
+{
+	if (external_fg) {
+		external_fg = batt_gauge;
+		pr_err("multiple battery gauge called\n");
+	} else
+		external_fg = batt_gauge;
+}
+EXPORT_SYMBOL(external_battery_gauge_register);
+
+void external_battery_gauge_unregister(
+				struct external_battery_gauge *batt_gauge)
+{
+	external_fg = NULL;
+}
+EXPORT_SYMBOL(external_battery_gauge_unregister);
 
 static int qg_esr_count = 3;
 static ssize_t esr_count_show(struct device *dev, struct device_attribute
@@ -124,10 +150,6 @@ static bool is_battery_present(struct qpnp_qg *chip)
 #define DEBUG_BATT_ID_HIGH	8500
 static bool is_debug_batt_id(struct qpnp_qg *chip)
 {
-	if (is_between(DEBUG_BATT_ID_LOW, DEBUG_BATT_ID_HIGH,
-					chip->batt_id_ohm))
-		return true;
-
 	return false;
 }
 
@@ -176,7 +198,7 @@ static int qg_read_ocv(struct qpnp_qg *chip, u32 *ocv_uv, u32 *ocv_raw, u8 type)
 	temp = *ocv_raw;
 	*ocv_uv = V_RAW_TO_UV(temp);
 
-	pr_debug("%s: OCV_RAW=%x OCV=%duV\n", ocv_name, *ocv_raw, *ocv_uv);
+	pr_err("%s: OCV_RAW=%x OCV=%duV\n", ocv_name, *ocv_raw, *ocv_uv);
 
 	return rc;
 }
@@ -257,6 +279,7 @@ static void qg_notify_charger(struct qpnp_qg *chip)
 	if (!chip->profile_loaded)
 		return;
 
+#ifndef OPLUS_FEATURE_CHG_BASIC
 	prop.intval = chip->bp.float_volt_uv;
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_VOLTAGE_MAX, &prop);
@@ -265,6 +288,7 @@ static void qg_notify_charger(struct qpnp_qg *chip)
 			rc);
 		return;
 	}
+#endif
 
 	prop.intval = chip->bp.fastchg_curr_ma * 1000;
 	rc = power_supply_set_property(chip->batt_psy,
@@ -275,7 +299,7 @@ static void qg_notify_charger(struct qpnp_qg *chip)
 		return;
 	}
 
-	pr_debug("Notified charger on float voltage and FCC\n");
+	pr_err("Notified charger on float voltage and FCC\n");
 
 	rc = power_supply_get_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_CHARGE_TERM_CURRENT, &prop);
@@ -383,7 +407,11 @@ static int qg_config_s2_state(struct qpnp_qg *chip,
 		acc_length = chip->dt.sleep_s2_acc_length;
 		break;
 	case S2_DEFAULT:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		fifo_length = chip->dt.fast_chg_s2_fifo_length;
+#else
 		fifo_length = chip->dt.s2_fifo_length;
+#endif
 		acc_interval = chip->dt.s2_acc_intvl_ms;
 		acc_length = chip->dt.s2_acc_length;
 		break;
@@ -458,7 +486,7 @@ static int qg_process_fifo(struct qpnp_qg *chip, u32 fifo_length)
 	chip->kdata.fifo_time = (u32)rtc_sec;
 
 	if (!fifo_length) {
-		pr_debug("No FIFO data\n");
+		pr_err("No FIFO data\n");
 		return 0;
 	}
 
@@ -557,7 +585,7 @@ static int qg_process_accumulator(struct qpnp_qg *chip)
 	}
 
 	if (!count || count < 10) { /* Ignore small accumulator data */
-		pr_debug("No ACCUMULATOR data!\n");
+		pr_err("No ACCUMULATOR data!\n");
 		return 0;
 	}
 
@@ -1017,7 +1045,10 @@ static int qg_process_esr_data(struct qpnp_qg *chip)
 
 	return 0;
 }
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+extern int oplus_chg_get_ffc_status(void);//kilody
+extern bool oplus_warp_get_fastchg_ing(void);
+#endif
 static int qg_esr_estimate(struct qpnp_qg *chip)
 {
 	int rc, i, ibat = 0, temp = 0;
@@ -1026,7 +1057,10 @@ static int qg_esr_estimate(struct qpnp_qg *chip)
 
 	if (chip->dt.esr_disable)
 		return 0;
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (oplus_warp_get_fastchg_ing())
+		return 0;
+#endif
 	/*
 	 * Charge - enable ESR estimation if IBAT > MIN_IBAT.
 	 * Discharge - enable ESR estimation only if enabled via DT.
@@ -1395,7 +1429,7 @@ static irqreturn_t qg_vbat_empty_handler(int irq, void *data)
 			chip->battery_missing)
 		return IRQ_HANDLED;
 
-	pr_warn("VBATT EMPTY SOC = 0\n");
+	pr_err("VBATT EMPTY SOC = 0\n");
 
 	chip->catch_up_soc = 0;
 	qg_scale_soc(chip, true);
@@ -1801,6 +1835,9 @@ static int qg_get_charge_counter(struct qpnp_qg *chip, int *charge_counter)
 	int rc, cc_soc = 0;
 	int64_t temp = 0;
 
+	if (chip == NULL) {
+		return 0;
+	}
 	if (is_debug_batt_id(chip) || chip->battery_missing) {
 		*charge_counter = -EINVAL;
 		return 0;
@@ -1849,7 +1886,7 @@ static int qg_get_power(struct qpnp_qg *chip, int *val, bool average)
 	esr = chip->esr_last * 1000;
 
 	if (rbatt <= 0 || esr <= 0) {
-		pr_debug("Invalid rbatt/esr rbatt=%d esr=%d\n", rbatt, esr);
+		pr_err("Invalid rbatt/esr rbatt=%d esr=%d\n", rbatt, esr);
 		*val = -EINVAL;
 		return 0;
 	}
@@ -2098,11 +2135,11 @@ static int qg_psy_set_property(struct power_supply *psy,
 	switch (psp) {
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
 		if (chip->dt.cl_disable) {
-			pr_warn("Capacity learning disabled!\n");
+			pr_err("Capacity learning disabled!\n");
 			return 0;
 		}
 		if (chip->cl->active) {
-			pr_warn("Capacity learning active!\n");
+			pr_err("Capacity learning active!\n");
 			return 0;
 		}
 		if (pval->intval <= 0 || pval->intval > chip->cl->nom_cap_uah) {
@@ -2199,9 +2236,21 @@ static int qg_psy_get_property(struct power_supply *psy,
 		pval->intval = chip->dt.vbatt_cutoff_mv * 1000;
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_MAX:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (oplus_warp_get_fastchg_ing())
+			chip->bp.float_volt_uv = 4400000;
+		else if (0 == oplus_chg_get_ffc_status())
+			chip->bp.float_volt_uv = 4430000;
+#endif
 		pval->intval = chip->bp.float_volt_uv;
 		break;
 	case POWER_SUPPLY_PROP_BATT_FULL_CURRENT:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (oplus_chg_get_ffc_status() || oplus_warp_get_fastchg_ing())
+			chip->dt.iterm_ma = 400;
+		else
+			chip->dt.iterm_ma = 250;
+#endif
 		pval->intval = chip->dt.iterm_ma * 1000;
 		break;
 	case POWER_SUPPLY_PROP_BATT_PROFILE_VERSION:
@@ -2275,11 +2324,8 @@ static int qg_psy_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_BATT_AGE_LEVEL:
 		pval->intval = chip->batt_age_level;
 		break;
-	case POWER_SUPPLY_PROP_FG_TYPE:
-		pval->intval = chip->qg_mode;
-		break;
 	default:
-		pr_debug("Unsupported property %d\n", psp);
+		pr_err("Unsupported property %d\n", psp);
 		break;
 	}
 
@@ -2342,7 +2388,6 @@ static enum power_supply_property qg_psy_props[] = {
 	POWER_SUPPLY_PROP_POWER_NOW,
 	POWER_SUPPLY_PROP_SCALE_MODE_EN,
 	POWER_SUPPLY_PROP_BATT_AGE_LEVEL,
-	POWER_SUPPLY_PROP_FG_TYPE,
 };
 
 static const struct power_supply_desc qg_psy_desc = {
@@ -2386,7 +2431,7 @@ static int qg_charge_full_update(struct qpnp_qg *chip)
 	rc = power_supply_get_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_RECHARGE_SOC, &prop);
 	if (rc < 0 || prop.intval < 0) {
-		pr_debug("Failed to get recharge-soc\n");
+		pr_err("Failed to get recharge-soc\n");
 		recharge_soc = DEFAULT_RECHARGE_SOC;
 	} else {
 		recharge_soc = prop.intval;
@@ -3038,6 +3083,10 @@ static int qg_load_battery_profile(struct qpnp_qg *chip)
 		return rc;
 	}
 
+#ifdef OEM_TARGET_PRODUCT_EBBA
+	hardwareinfo_set_prop(HARDWARE_BATTERY_ID, chip->bp.batt_type_str);
+#endif
+
 	rc = qg_batterydata_init(profile_node);
 	if (rc < 0) {
 		pr_err("Failed to initialize battery-profile rc=%d\n", rc);
@@ -3123,7 +3172,7 @@ static int qg_load_battery_profile(struct qpnp_qg *chip)
 
 		if (chip->ttf->step_chg_cfg_valid) {
 			for (i = 0; i < tuple_len; i++)
-				pr_debug("Vbatt_low: %d Vbatt_high: %d FCC: %d\n",
+				pr_err("Vbatt_low: %d Vbatt_high: %d FCC: %d\n",
 				chip->ttf->step_chg_cfg[i].low_threshold,
 				chip->ttf->step_chg_cfg[i].high_threshold,
 				chip->ttf->step_chg_cfg[i].value);
@@ -3394,7 +3443,11 @@ static int qg_set_wa_flags(struct qpnp_qg *chip)
 		qg_esr_mod_count = 10;
 		break;
 	case PM7250B_SUBTYPE:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		qg_esr_mod_count = 5;
+#else
 		qg_esr_mod_count = 10;
+#endif
 		break;
 	case PM2250_SUBTYPE:
 		chip->wa_flags |= QG_CLK_ADJUST_WA |
@@ -4404,9 +4457,11 @@ static int qg_parse_dt(struct qpnp_qg *chip)
 	}
 
 	if (of_property_read_bool(node, "qcom,tcss-enable")) {
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		chip->dt.tcss_enable = false;
+#else
 		chip->dt.tcss_enable = true;
-
+#endif
 		rc = of_property_read_u32(node,
 				"qcom,tcss-entry-soc", &temp);
 		if (rc < 0)
@@ -4878,6 +4933,11 @@ static int qpnp_qg_probe(struct platform_device *pdev)
 	}
 
 	qg_get_battery_capacity(chip, &soc);
+
+#ifdef OEM_TARGET_PRODUCT_EBBA
+	hardwareinfo_set_prop(HARDWARE_BMS_GAUGE, QCOMM_PMIC_TYPE);
+	hardwareinfo_set_prop(HARDWARE_CHARGER_IC, QCOMM_PMIC_TYPE);
+#endif
 
 	pr_info("QG initialized! battery_profile=%s SOC=%d QG_subtype=%d QG_version=%s QG_mode=%s\n",
 			qg_get_battery_type(chip), soc, chip->qg_subtype,
