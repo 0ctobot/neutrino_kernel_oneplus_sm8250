@@ -695,7 +695,6 @@ static void tp_touch_handle(struct touchpanel_data *ts)
 		if (up_status) {
 			tp_touch_up(ts);
 			mutex_unlock(&ts->report_mutex);
-			kfree(points);
 			return;
 		}
 		finger_num = 0;
