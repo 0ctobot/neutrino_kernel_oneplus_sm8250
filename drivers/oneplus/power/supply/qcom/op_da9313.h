@@ -13,13 +13,13 @@
 #include <linux/power_supply.h>
 
 #define chg_debug(fmt, ...)                                                    \
-    printk(KERN_NOTICE "[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
+    pr_debug("[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
 
 #define chg_err(fmt, ...)                                                      \
-    printk(KERN_ERR "[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
+    pr_err("[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
 
 #define chg_info(fmt, ...)                                                     \
-    printk(KERN_INFO "[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
+    pr_debug("[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
 
 #define DA9313_FIRST_REG                                    0x00
 #define DA9313_LAST_REG                                     0x14

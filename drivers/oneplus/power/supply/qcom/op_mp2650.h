@@ -15,13 +15,13 @@
 #include <linux/regmap.h>
 
 #define chg_debug(fmt, ...)                                                    \
-    printk(KERN_NOTICE "[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
+    pr_debug("[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
 
 #define chg_err(fmt, ...)                                                      \
-    printk(KERN_ERR "[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
+    pr_err("[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
 
 #define chg_info(fmt, ...)                                                     \
-    printk(KERN_INFO "[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
+    pr_debug("[SWARPCHG][%s]" fmt, __func__, ##__VA_ARGS__)
 
 
 #define WPC_PRECHARGE_CURRENT                                   480

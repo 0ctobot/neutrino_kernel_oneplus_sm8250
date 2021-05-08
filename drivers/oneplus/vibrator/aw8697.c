@@ -3658,7 +3658,7 @@ static ssize_t aw8697_activate_store(struct device *dev,
     if (val != 0 && val != 1)
         return count;
     if (val_pre != val)
-       pr_info("%s: value=%d\n", __FUNCTION__, val);
+       pr_debug("%s: value=%d\n", __FUNCTION__, val);
     val_pre = val;
     mutex_lock(&aw8697->lock);
 /*for type Android OS's vibrator 20181225 begin*/
@@ -3687,7 +3687,7 @@ static ssize_t aw8697_activate_store(struct device *dev,
 		aw8697_haptic_set_rtp_aei(aw8697, false);
 		aw8697_interrupt_clear(aw8697);
 		aw8697->sin_add_flag = 0;
-		pr_info("%s: value=%d\n", __FUNCTION__, val);
+		pr_debug("%s: value=%d\n", __FUNCTION__, val);
 	} else {
 			if (check_factory_mode()) {
 				aw8697->rtp_file_num = FACTORY_MODE_AT_MODE_RTP_NUMBER;//Number for AT vibration
@@ -5883,19 +5883,19 @@ static int aw8697_vibrator_init(struct aw8697 *aw8697)
 static void aw8697_interrupt_clear(struct aw8697 *aw8697)
 {
     unsigned char reg_val = 0;
-    pr_info("%s enter\n", __func__);
+    pr_debug("%s enter\n", __func__);
     aw8697_i2c_read(aw8697, AW8697_REG_SYSINT, &reg_val);
-    pr_info("%s: reg SYSINT=0x%x\n", __func__, reg_val);
+    pr_debug("%s: reg SYSINT=0x%x\n", __func__, reg_val);
 }
 
 static void aw8697_interrupt_setup(struct aw8697 *aw8697)
 {
     unsigned char reg_val = 0;
 
-    pr_info("%s enter\n", __func__);
+    pr_debug("%s enter\n", __func__);
 
     aw8697_i2c_read(aw8697, AW8697_REG_SYSINT, &reg_val);
-    pr_info("%s: reg SYSINT=0x%x\n", __func__, reg_val);
+    pr_debug("%s: reg SYSINT=0x%x\n", __func__, reg_val);
 
     /* edge int mode */
     aw8697_i2c_write_bits(aw8697, AW8697_REG_DBGCTRL,
