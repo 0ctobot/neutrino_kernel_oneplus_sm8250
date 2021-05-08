@@ -116,44 +116,9 @@ static int bq2597x_mode_data[] = {
 #define VBAT_REG_STATUS_MASK (1 << VBAT_REG_STATUS_SHIFT)
 #define IBAT_REG_STATUS_MASK (1 << VBAT_REG_STATUS_SHIFT)
 
-#define bq_err(fmt, ...)                                                       \
-	do {                                                                   \
-		if (bq->mode == BQ25970_ROLE_MASTER)                           \
-			printk(KERN_ERR "[bq2597x-MASTER]:%s:" fmt, __func__,  \
-			       ##__VA_ARGS__);                                 \
-		else if (bq->mode == BQ25970_ROLE_SLAVE)                       \
-			printk(KERN_ERR "[bq2597x-SLAVE]:%s:" fmt, __func__,   \
-			       ##__VA_ARGS__);                                 \
-		else                                                           \
-			printk(KERN_ERR "[bq2597x-STANDALONE]:%s:" fmt,        \
-			       __func__, ##__VA_ARGS__);                       \
-	} while (0)
-
-#define bq_info(fmt, ...)                                                      \
-	do {                                                                   \
-		if (bq->mode == BQ25970_ROLE_MASTER)                           \
-			printk(KERN_DEBUG "[bq2597x-MASTER]:%s:" fmt, __func__, \
-			       ##__VA_ARGS__);                                 \
-		else if (bq->mode == BQ25970_ROLE_SLAVE)                       \
-			printk(KERN_DEBUG "[bq2597x-SLAVE]:%s:" fmt, __func__,  \
-			       ##__VA_ARGS__);                                 \
-		else                                                           \
-			printk(KERN_DEBUG "[bq2597x-STANDALONE]:%s:" fmt,       \
-			       __func__, ##__VA_ARGS__);                       \
-	} while (0)
-
-#define bq_dbg(fmt, ...)                                                       \
-	do {                                                                   \
-		if (bq->mode == BQ25970_ROLE_MASTER)                           \
-			printk(KERN_DEBUG "[bq2597x-MASTER]:%s:" fmt,          \
-			       __func__, ##__VA_ARGS__);                       \
-		else if (bq->mode == BQ25970_ROLE_SLAVE)                       \
-			printk(KERN_DEBUG "[bq2597x-SLAVE]:%s:" fmt, __func__, \
-			       ##__VA_ARGS__);                                 \
-		else                                                           \
-			printk(KERN_DEBUG "[bq2597x-STANDALONE]:%s:" fmt,      \
-			       __func__, ##__VA_ARGS__);                       \
-	} while (0)
+#define bq_err(fmt, ...) pr_debug("[bq2597x]:%s:" fmt, __func__, ##__VA_ARGS__)
+#define bq_info(fmt, ...) pr_debug("[bq2597x]:%s:" fmt, __func__, ##__VA_ARGS__)
+#define bq_dbg(fmt, ...) pr_debug("[bq2597x]:%s:" fmt, __func__, ##__VA_ARGS__)
 
 /*end*/
 
