@@ -4672,6 +4672,7 @@ CONFIG_QTI_CRYPTO_TZ=y
 # CONFIG_QTI_HW_KEY_MANAGER is not set
 # CONFIG_ICNSS2 is not set
 # CONFIG_ICNSS is not set
+# CONFIG_WCNSS_CORE is not set
 # CONFIG_SOC_TI is not set
 
 #
