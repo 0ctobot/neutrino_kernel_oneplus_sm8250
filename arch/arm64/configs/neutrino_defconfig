@@ -1696,6 +1696,11 @@ CONFIG_QTI_MAXIM_FAN_CONTROLLER=y
 # CONFIG_FPR_FPC is not set
 
 #
+# qrc device driver
+#
+# CONFIG_QRC is not set
+
+#
 # SCSI device support
 #
 CONFIG_SCSI_MOD=y
