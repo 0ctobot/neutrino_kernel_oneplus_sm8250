@@ -17,14 +17,6 @@ config OEM_BOOT_MODE
     help
         detect oem boot mode  If unsure, say y.
 
-config RF_CABLE_DETECT
-    bool "detect RF cable connection"
-    help
-      detect RF cable connection for different RF configuration
-      To compile this driver as a module, choose M here: the module
-      will be called RF cable.
-      If unsure, say N.
-
 config GPIO_SWITCH
 	tristate "use gpio swith"
 	default y
