@@ -16,8 +16,6 @@ struct mhi_sfr_info;
 
 #define REG_WRITE_QUEUE_LEN 1024
 
-#define SFR_BUF_SIZE 256
-
 /**
  * enum MHI_CB - MHI callback
  * @MHI_CB_IDLE: MHI entered idle state
@@ -814,7 +812,7 @@ int mhi_force_rddm_mode(struct mhi_controller *mhi_cntrl);
  * mhi_dump_sfr - Print SFR string from RDDM table.
  * @mhi_cntrl: MHI controller
  */
-void mhi_dump_sfr(struct mhi_controller *mhi_cntrl, char *buf, size_t len);
+void mhi_dump_sfr(struct mhi_controller *mhi_cntrl);
 
 /**
  * mhi_get_remote_time - Get external modem time relative to host time
