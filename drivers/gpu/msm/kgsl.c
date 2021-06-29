@@ -27,7 +27,6 @@
 #include "kgsl_reclaim.h"
 #include "kgsl_sync.h"
 #include "kgsl_trace.h"
-#include <linux/mm_types.h>
 
 #ifndef arch_mmap_check
 #define arch_mmap_check(addr, len, flags)	(0)
@@ -4802,7 +4801,6 @@ static unsigned long _get_svm_area(struct kgsl_process_private *private,
 	uint64_t align;
 	unsigned long result;
 	unsigned long addr;
-	uint64_t svm_start, svm_end;
 
 	if (align_shift >= ilog2(SZ_2M))
 		align = SZ_2M;
@@ -4819,9 +4817,6 @@ static unsigned long _get_svm_area(struct kgsl_process_private *private,
 	if (kgsl_mmu_svm_range(private->pagetable, &start, &end,
 				entry->memdesc.flags))
 		return -ERANGE;
-
-	svm_start = start;
-	svm_end = end;
 
 	/* now clamp the range based on the CPU's requirements */
 	start = max_t(uint64_t, start, mmap_min_addr);
@@ -4871,31 +4866,6 @@ static unsigned long _get_svm_area(struct kgsl_process_private *private,
 	return result;
 }
 
-static void kgsl_send_uevent_notify(struct kgsl_device *desc, char *comm,
-			unsigned long len, unsigned long total_vm,
-			unsigned long largest_gap_cpu, unsigned long largest_gap_gpu)
-{
-	char *envp[6];
-
-	if (!desc)
-		return;
-
-	envp[0] = kasprintf(GFP_KERNEL, "COMM=%s", comm);
-	envp[1] = kasprintf(GFP_KERNEL, "LEN=%lu", len);
-	envp[2] = kasprintf(GFP_KERNEL, "TOTAL_VM=%lu", total_vm);
-	envp[3] = kasprintf(GFP_KERNEL, "LARGEST_GAP_CPU=%lu", largest_gap_cpu);
-	envp[4] = kasprintf(GFP_KERNEL, "LARGEST_GAP_GPU=%lu", largest_gap_gpu);
-	envp[5] = NULL;
-	kobject_uevent_env(&desc->dev->kobj, KOBJ_CHANGE, envp);
-	kfree(envp[4]);
-	kfree(envp[3]);
-	kfree(envp[2]);
-	kfree(envp[1]);
-	kfree(envp[0]);
-}
-
-static int current_pid = -1;
-
 static unsigned long
 kgsl_get_unmapped_area(struct file *file, unsigned long addr,
 			unsigned long len, unsigned long pgoff,
@@ -4935,29 +4905,12 @@ kgsl_get_unmapped_area(struct file *file, unsigned long addr,
 			flush_workqueue(kgsl_driver.mem_workqueue);
 			val = _get_svm_area(private, entry, addr, len, flags);
 		}
-		if (IS_ERR_VALUE(val)) {
-			struct vm_area_struct *vma __maybe_unused;
-			struct mm_struct *mm = current->mm;
-			unsigned long largest_gap_cpu = UINT_MAX;
-			unsigned long largest_gap_gpu = UINT_MAX;
-
+		if (IS_ERR_VALUE(val))
 			dev_err_ratelimited(device->dev,
 					       "_get_svm_area: pid %d mmap_base %lx addr %lx pgoff %lx len %ld failed error %d\n",
 					       pid_nr(private->pid),
 					       current->mm->mmap_base, addr,
 					       pgoff, len, (int) val);
-
-			if (pid_nr(private->pid) != current_pid) {
-				current_pid = pid_nr(private->pid);
-				kgsl_send_uevent_notify(device, current->group_leader->comm,
-					len, mm->total_vm, largest_gap_cpu, largest_gap_gpu);
-			}
-
-			dev_err_ratelimited(device->dev,
-				"kgsl additional info: %s VmSize %lu MaxGapCpu %lu MaxGapGpu %lu\n"
-				, current->group_leader->comm, mm->total_vm, largest_gap_cpu
-				, largest_gap_gpu);
-		}
 	}
 
 put:
