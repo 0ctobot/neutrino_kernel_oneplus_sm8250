@@ -4136,8 +4136,6 @@ void sde_crtc_commit_kickoff(struct drm_crtc *crtc,
 	}
 	sde_crtc->play_count++;
 
-	sde_vbif_clear_errors(sde_kms);
-
 	if (is_error) {
 		_sde_crtc_remove_pipe_flush(crtc);
 		_sde_crtc_blend_setup(crtc, old_state, false);
@@ -5144,8 +5142,8 @@ static int sde_crtc_onscreenfinger_atomic_check(struct sde_crtc_state *cstate,
 
 	if (fppressed_index > 0 || fp_mode == 1) {
 		cpu_input_boost_kick_max(500);
-		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500);
-		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 500);
+		devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
+		devfreq_boost_kick_max(DEVFREQ_CPU_CPU_LLCC_BW, 500);
 	}
 
 	if(aod_index <0){

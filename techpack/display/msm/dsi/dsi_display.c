@@ -23,7 +23,6 @@
 #include <drm/drm_panel.h>
 #include <linux/notifier.h>
 #include <linux/sched.h>
-#include <linux/pm_qos.h>
 #include <linux/cpufreq.h>
 #include <linux/pm_wakeup.h>
 #include <linux/input.h>
