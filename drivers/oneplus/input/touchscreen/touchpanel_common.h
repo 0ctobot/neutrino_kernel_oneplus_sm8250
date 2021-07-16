@@ -27,6 +27,8 @@
 #include <linux/delay.h>
 //#include <linux/oneplus/boot_mode.h>
 #include <linux/workqueue.h>
+#include <linux/pm_qos.h>
+#include <linux/i2c-qcom-geni.h>
 
 
 #include "util_interface/touch_interfaces.h"
@@ -599,6 +601,9 @@ struct touchpanel_data {
 	struct register_info reg_info;                      /*debug node for register length*/
 	struct black_gesture_test gesture_test;             /*gesture test struct*/
 
+	struct pm_qos_request pm_i2c_req;
+	struct pm_qos_request pm_touch_req;
+
 	void                  *chip_data;                   /*Chip Related data*/
 	void                  *private_data;                /*Reserved Private data*/
 	char                  *earsense_delta;
@@ -622,7 +627,7 @@ struct touchpanel_operations {
 	fw_update_state (*fw_update) (void *chip_data, const struct firmware *fw, bool force);    /*return 0 normal; return -1:update failed;*/
 	int  (*power_control)        (void *chip_data, bool enable);                              /*return 0:success;other:abnormal, need to jump out*/
 	int  (*reset_gpio_control)   (void *chip_data, bool enable);                              /*used for reset gpio*/
-	u8   (*trigger_reason)       (void *chip_data, int gesture_enable, int is_suspended);     /*clear innterrupt reg && detect irq trigger reason*/
+	u8   (*trigger_reason)       (void *chip_data, int gesture_enable, int is_suspended, int irq);     /*clear innterrupt reg && detect irq trigger reason*/
 	u32  (*u32_trigger_reason)   (void *chip_data, int gesture_enable, int is_suspended);
 	u8   (*get_keycode)          (void *chip_data);                                           /*get touch-key code*/
 	int  (*esd_handle)           (void *chip_data);

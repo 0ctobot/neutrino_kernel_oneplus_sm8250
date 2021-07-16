@@ -94,7 +94,7 @@ static void tp_touch_release(struct touchpanel_data *ts);
 static void tp_btnkey_release(struct touchpanel_data *ts);
 static void tp_fw_update_work(struct work_struct *work);
 static int init_debug_info_proc(struct touchpanel_data *ts);
-static void tp_work_func(struct touchpanel_data *ts);
+static void tp_work_func(struct touchpanel_data *ts, int irq);
 __attribute__((weak)) int request_firmware_select(const struct firmware **firmware_p, const char *name, struct device *device) {return 1;}
 __attribute__((weak)) int register_devinfo(char *name, struct manufacture_info *info) {return 1;}
 __attribute__((weak)) int preconfig_power_control(struct touchpanel_data *ts) {return 0;}
@@ -925,10 +925,10 @@ static void tp_work_common_callback(void)
 	if (g_tp == NULL)
 		return;
 	ts = g_tp;
-	tp_work_func(ts);
+	tp_work_func(ts, 0);
 }
 
-static void tp_work_func(struct touchpanel_data *ts)
+static void tp_work_func(struct touchpanel_data *ts, int irq)
 {
 	u32 cur_event = 0;
 
@@ -936,6 +936,10 @@ static void tp_work_func(struct touchpanel_data *ts)
 		TPD_INFO("not support ts_ops->trigger_reason callback\n");
 		return;
 	}
+
+	pm_qos_update_request(&ts->pm_touch_req, 100);
+	pm_qos_update_request(&ts->pm_i2c_req, 100);
+
 	/*
 	 *  trigger_reason:this callback determine which trigger reason should be
 	 *  The value returned has some policy!
@@ -945,7 +949,7 @@ static void tp_work_func(struct touchpanel_data *ts)
 	if (ts->ts_ops->u32_trigger_reason)
 		cur_event = ts->ts_ops->u32_trigger_reason(ts->chip_data, ts->gesture_enable, ts->is_suspended);
 	else
-		cur_event = ts->ts_ops->trigger_reason(ts->chip_data, ts->gesture_enable, ts->is_suspended);
+		cur_event = ts->ts_ops->trigger_reason(ts->chip_data, ts->gesture_enable, ts->is_suspended, irq);
 
 	if (CHK_BIT(cur_event, IRQ_TOUCH) || CHK_BIT(cur_event, IRQ_BTN_KEY) || CHK_BIT(cur_event, IRQ_DATA_LOGGER) || \
 		CHK_BIT(cur_event, IRQ_FACE_STATE) || CHK_BIT(cur_event, IRQ_FINGERPRINT)) {
@@ -985,6 +989,9 @@ static void tp_work_func(struct touchpanel_data *ts)
 	} else {
 		TPD_DEBUG("unknown irq trigger reason\n");
 	}
+
+	pm_qos_update_request(&ts->pm_i2c_req, PM_QOS_DEFAULT_VALUE);
+	pm_qos_update_request(&ts->pm_touch_req, PM_QOS_DEFAULT_VALUE);
 }
 
 static void tp_work_func_unlock(struct touchpanel_data *ts)
@@ -1152,7 +1159,7 @@ static irqreturn_t tp_irq_thread_fn(int irq, void *dev_id)
 	if (ts->int_mode == BANNABLE) {
 		__pm_stay_awake(ts->source);	//avoid system enter suspend lead to i2c error
 		mutex_lock(&ts->mutex);
-		tp_work_func(ts);
+		tp_work_func(ts, irq);
 		mutex_unlock(&ts->mutex);
 		__pm_relax(ts->source);
 	} else {
@@ -4892,13 +4899,15 @@ int tp_register_irq_func(struct touchpanel_data *ts)
 		TPD_DEBUG("%s, irq_gpio is %d, ts->irq is %d\n", __func__, ts->hw_res.irq_gpio, ts->irq);
 		ret = request_threaded_irq(ts->irq, NULL,
 				tp_irq_thread_fn,
-				ts->irq_flags | IRQF_ONESHOT,
+				ts->irq_flags | IRQF_ONESHOT | IRQF_PERF_AFFINE,
 				TPD_DEVICE, ts);
 		if (ret < 0) {
 			TPD_INFO("%s request_threaded_irq ret is %d\n", __func__, ret);
+			goto err_irq;
 		}
 	} else {
 		TPD_INFO("%s:no valid irq\n", __func__);
+		goto err_irq;
 	}
 #else
 	hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
@@ -4906,6 +4915,11 @@ int tp_register_irq_func(struct touchpanel_data *ts)
 	hrtimer_start(&ts->timer, ktime_set(3, 0), HRTIMER_MODE_REL);
 #endif
 
+	return 0;
+
+err_irq:
+	pm_qos_remove_request(&ts->pm_touch_req);
+	pm_qos_remove_request(&ts->pm_i2c_req);
 	return ret;
 }
 
