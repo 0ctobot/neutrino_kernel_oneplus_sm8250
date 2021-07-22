@@ -137,7 +137,6 @@ static unsigned long limits_mitigation_notify(struct cpufreq_qcom *c,
 			freq = policy->cpuinfo.max_freq;
 	}
 
-	sched_update_cpu_freq_min_max(&c->related_cpus, 0, freq);
 	trace_dcvsh_freq(cpumask_first(&c->related_cpus), freq);
 	c->dcvsh_freq_limit = freq;
 
