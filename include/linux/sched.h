@@ -111,6 +111,19 @@ struct task_group;
 #define task_is_stopped_or_traced(task)	((task->state & (__TASK_STOPPED | __TASK_TRACED)) != 0)
 
 
+/*
+ * Enum for display driver to provide varying refresh rates
+ */
+enum fps {
+	FPS0 = 0,
+	FPS30 = 30,
+	FPS48 = 48,
+	FPS60 = 60,
+	FPS90 = 90,
+	FPS120 = 120,
+	FPS144 = 144,
+};
+
 #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
 
 /*
