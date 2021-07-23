@@ -30,4 +30,9 @@ int msm_11ad_modinit(void);
 /* call on rmmod */
 void msm_11ad_modexit(void);
 
+/* stub out core_ctl boost */
+static inline int core_ctl_set_boost(bool boost)
+{
+	return 0;
+}
 #endif /* __MSM_11AD_H__ */
