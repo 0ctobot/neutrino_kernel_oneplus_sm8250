@@ -22,6 +22,11 @@ extern unsigned long nr_iowait(void);
 extern unsigned long nr_iowait_cpu(int cpu);
 extern void get_iowait_load(unsigned long *nr_waiters, unsigned long *load);
 
+static inline u64 sched_lpm_disallowed_time(int cpu)
+{
+	return 0;
+}
+
 static inline int sched_info_on(void)
 {
 #ifdef CONFIG_SCHEDSTATS
