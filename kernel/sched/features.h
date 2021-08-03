@@ -50,7 +50,7 @@
  * Queue remote wakeups on the target CPU and process them
  * using the scheduler IPI. Reduces rq->lock contention/bounces.
  */
-#define SCHED_FEAT_TTWU_QUEUE 0
+#define SCHED_FEAT_TTWU_QUEUE 1
 
 /*
  * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
@@ -97,7 +97,7 @@
 /*
  * Fast pre-selection of CPU candidates for EAS.
  */
-#define SCHED_FEAT_FIND_BEST_TARGET 1
+#define SCHED_FEAT_FIND_BEST_TARGET 0
 
 /*
  * Energy aware scheduling algorithm choices:
@@ -123,10 +123,3 @@
  * RT class.
  */
 #define SCHED_FEAT_SCHEDTUNE_BOOST_HOLD_ALL 0
-
-/*
- * Inflate the effective utilization of SchedTune-boosted tasks, which
- * generally leads to usage of higher frequencies.
- * If disabled, boosts will only bias tasks to higher-capacity CPUs.
- */
-#define SCHED_FEAT_SCHEDTUNE_BOOST_UTIL 0
