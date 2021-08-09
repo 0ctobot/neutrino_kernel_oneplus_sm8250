@@ -4025,6 +4025,7 @@ CONFIG_LEDS_CLASS=y
 #
 # LED drivers
 #
+# CONFIG_LEDS_AW2016 is not set
 # CONFIG_LEDS_BCM6328 is not set
 # CONFIG_LEDS_BCM6358 is not set
 # CONFIG_LEDS_CR0014114 is not set
