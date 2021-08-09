@@ -2,9 +2,18 @@
 /*
  * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
  */
+#include <linux/moduleparam.h>
 #include <drm/msm_drm_pp.h>
 #include "sde_hw_color_proc_common_v4.h"
 #include "sde_hw_color_proc_v4.h"
+
+unsigned int kcal_red = 256;
+unsigned int kcal_green = 256;
+unsigned int kcal_blue = 256;
+
+module_param(kcal_red, uint, 0644);
+module_param(kcal_green, uint, 0644);
+module_param(kcal_blue, uint, 0644);
 
 static int sde_write_3d_gamut(struct sde_hw_blk_reg_map *hw,
 		struct drm_msm_3d_gamut *payload, u32 base,
@@ -203,12 +212,20 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 	struct drm_msm_pcc *pcc_cfg;
 	struct drm_msm_pcc_coeff *coeffs = NULL;
 	int i = 0;
+	int kcal_min = 20;
 	u32 base = 0;
 
 	if (!ctx || !cfg) {
 		DRM_ERROR("invalid param ctx %pK cfg %pK\n", ctx, cfg);
 		return;
 	}
+
+	if (kcal_red < kcal_min)
+		kcal_red = kcal_min;
+	if (kcal_green < kcal_min)
+		kcal_green = kcal_min;
+	if (kcal_blue < kcal_min)
+		kcal_blue = kcal_min;
 
 	if (!hw_cfg->payload) {
 		DRM_DEBUG_DRIVER("disable pcc feature\n");
@@ -223,7 +240,6 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 	}
 
 	pcc_cfg = hw_cfg->payload;
-
 	for (i = 0; i < PCC_NUM_PLANES; i++) {
 		base = ctx->cap->sblk->pcc.base + (i * sizeof(u32));
 		switch (i) {
@@ -260,9 +276,17 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 		}
 
 		SDE_REG_WRITE(&ctx->hw, base + PCC_C_OFF, coeffs->c);
-		SDE_REG_WRITE(&ctx->hw, base + PCC_R_OFF, coeffs->r);
-		SDE_REG_WRITE(&ctx->hw, base + PCC_G_OFF, coeffs->g);
-		SDE_REG_WRITE(&ctx->hw, base + PCC_B_OFF, coeffs->b);
+// ====
+// RED
+		SDE_REG_WRITE(&ctx->hw, base + PCC_R_OFF,
+			i == 0 ? (coeffs->r * kcal_red) / 256 : coeffs->r);
+// GREEN
+		SDE_REG_WRITE(&ctx->hw, base + PCC_G_OFF,
+			i == 1 ? (coeffs->g * kcal_green) / 256 : coeffs->g);
+// BLUE
+		SDE_REG_WRITE(&ctx->hw, base + PCC_B_OFF,
+			i == 2 ? (coeffs->b * kcal_blue) / 256 : coeffs->b);
+// =====
 		SDE_REG_WRITE(&ctx->hw, base + PCC_RG_OFF, coeffs->rg);
 		SDE_REG_WRITE(&ctx->hw, base + PCC_RB_OFF, coeffs->rb);
 		SDE_REG_WRITE(&ctx->hw, base + PCC_GB_OFF, coeffs->gb);
