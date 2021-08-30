@@ -44,6 +44,7 @@
 #include <qdf_util.h>
 #include "dp_peer.h"
 #include "dp_rx_mon.h"
+#include "dp_ipa.h"
 #include "htt_stats.h"
 #include "dp_htt.h"
 #ifdef WLAN_SUPPORT_RX_FISA
