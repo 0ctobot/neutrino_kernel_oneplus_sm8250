@@ -1383,7 +1383,7 @@ static int msm_pcm_loopback_volume_get(struct snd_kcontrol *kcontrol,
 static int msm_pcm_loopback_volume_put(struct snd_kcontrol *kcontrol,
 			       struct snd_ctl_elem_value *ucontrol)
 {
-	pr_info("%s: volume = %d\n", __func__, ucontrol->value.integer.value[0]);
+	pr_info("%s: volume = %ld\n", __func__, ucontrol->value.integer.value[0]);
 
 	if (loopback_map.active) {
 		loopback_map.volume = ucontrol->value.integer.value[0];
@@ -22844,10 +22844,11 @@ static int msm_routing_put_stereo_to_custom_stereo_control(
 					goto skip_send_custom_stereo;
 				topo_id = adm_get_topology_for_port_copp_idx(
 					msm_bedais[be_index].port_id, idx);
-				if (topo_id < 0)
+				if (topo_id < 0) {
 					pr_debug("%s:Err:custom stereo topo %d",
 						 __func__, topo_id);
 					pr_debug("idx %d\n", idx);
+				}
 				if (topo_id == DS2_ADM_COPP_TOPOLOGY_ID)
 					rc = msm_ds2_dap_set_custom_stereo_onoff
 						(msm_bedais[be_index].port_id,
@@ -24003,7 +24004,7 @@ static const int mi2s_rx_vi_fb_tx_value[] = {
 };
 
 #ifdef CONFIG_SND_SOC_TFA9874_FOR_DAVI
-static const int const tert_mi2s_rx_vi_fb_tx_value[] = {
+static const int tert_mi2s_rx_vi_fb_tx_value[] = {
 	MSM_BACKEND_DAI_MAX, MSM_BACKEND_DAI_TERTIARY_MI2S_TX
 };
 #endif

@@ -2852,7 +2852,7 @@ static int syna_tcm_erase_flash(struct syna_tcm_data *tcm_info, unsigned int pag
 static int syna_tcm_write_flash(struct syna_tcm_data *tcm_info, struct reflash_hcd *reflash_hcd,
 		unsigned int address, const unsigned char *data, unsigned int datalen)
 {
-	int retval;
+	int retval = 0;
 	unsigned int w_len, xfer_len, remaining_len;
 	unsigned int flash_addr, block_addr;
 	unsigned char *resp_buf = NULL;

@@ -1846,16 +1846,6 @@ static void _sde_encoder_autorefresh_disable_seq2(
 				autorefresh_status, SDE_EVTLOG_FUNC_CASE2);
 	}
 
-	if (!(autorefresh_status & BIT(7))) {
-		usleep_range(AUTOREFRESH_SEQ2_POLL_TIME,
-			AUTOREFRESH_SEQ2_POLL_TIME + 1);
-
-		autorefresh_status = hw_mdp->ops.get_autorefresh_status(hw_mdp,
-					phys_enc->intf_idx);
-		SDE_EVT32(DRMID(phys_enc->parent), phys_enc->intf_idx - INTF_0,
-				autorefresh_status, SDE_EVTLOG_FUNC_CASE2);
-	}
-
 	while (autorefresh_status & BIT(7)) {
 		if (!trial) {
 			SDE_ERROR_CMDENC(cmd_enc,
@@ -1926,7 +1916,7 @@ static void sde_encoder_phys_cmd_trigger_start(
 		return;
 
 	/* we don't issue CTL_START when using autorefresh */
-		frame_cnt = _sde_encoder_phys_cmd_get_autorefresh_property(phys_enc);
+	frame_cnt = _sde_encoder_phys_cmd_get_autorefresh_property(phys_enc);
 	if (frame_cnt) {
 #if defined(CONFIG_PXLW_IRIS)
 		if (iris_is_chip_supported()) {

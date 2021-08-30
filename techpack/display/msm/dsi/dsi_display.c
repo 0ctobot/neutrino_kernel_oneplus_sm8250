@@ -9279,7 +9279,7 @@ int dsi_display_get_gamma_para(struct dsi_display *dsi_display, struct dsi_panel
 	char gamma_para_backup[413] = {0};
 	int check_sum_60hz = 0;
 
-	DSI_ERR("start\n", __func__);
+	DSI_ERR("start %s()\n", __func__);
 
 	if (!panel || !panel->cur_mode)
 		return -EINVAL;
@@ -9682,91 +9682,7 @@ int dsi_display_update_gamma_para(struct drm_connector *connector)
 int dsi_display_read_serial_number(struct dsi_display *dsi_display,
 		struct dsi_panel *panel, char *buf, int len)
 {
-	int rc = 0;
-	int count = 0;
-	unsigned char panel_ic_v = 0;
-	unsigned char register_d6[10] = {0};
-	int ddic_x = 0;
-	int ddic_y = 0;
-	unsigned char code_info = 0;
-	unsigned char stage_info = 0;
-	unsigned char prodution_info = 0;
-
-	struct dsi_display_mode *mode;
-
-	if (!panel || !panel->cur_mode)
-		return -EINVAL;
-
-	rc = dsi_display_cmd_engine_enable(dsi_display);
-	if (rc) {
-		DSI_ERR("cmd engine enable failed\n");
-		return -EINVAL;
-	}
-
-	dsi_panel_acquire_panel_lock(panel);
-	mode = panel->cur_mode;
-
-	count = mode->priv_info->cmd_sets[DSI_CMD_SET_LEVEL2_KEY_ENABLE].count;
-	if (!count) {
-		DSI_ERR("This panel does not support level2 key enable command\n");
-	} else {
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LEVEL2_KEY_ENABLE);
-		if (rc) {
-			DSI_ERR("Failed to send DSI_CMD_SET_LEVEL2_KEY_ENABLE commands\n");
-			goto error;
-		}
-	}
-
-	if(strcmp(panel->name, "samsung ana6706 dsc cmd mode panel") == 0) {
-		dsi_display_register_read(dsi_display, 0xFA, &panel_ic_v, 1);
-		panel->panel_ic_v = panel_ic_v & 0x0f;
-	}
-
-	if ((strcmp(panel->name, "samsung ana6705 fhd cmd mode dsc dsi panel") == 0)
-		|| (strcmp(panel->name, "samsung ana6706 dsc cmd mode panel") == 0)) {
-		dsi_display_register_read(dsi_display, 0xD6, register_d6, 10);
-
-		memcpy(panel->buf_select, register_d6, 10);
-		panel->panel_tool = dsi_display_back_ToolsType_ANA6706(register_d6);
-		DSI_ERR("reg_d6: %02x %02x %02x %02x %02x %02x %02x\n", register_d6[0], register_d6[1], register_d6[2], register_d6[3], register_d6[4], register_d6[5], register_d6[6]);
-
-		ddic_x = (((register_d6[3] & 0x1f) << 4) | ((register_d6[4] & 0xf0) >> 4));
-		ddic_y = (register_d6[4] & 0x0f);
-		panel->ddic_x = ddic_x;
-		panel->ddic_y = ddic_y;
-		DSI_ERR("ddic_x = %d, ddic_y = %d\n", panel->ddic_x, panel->ddic_y);
-		len = 14;
-	}
-
-	dsi_display_register_read(dsi_display, 0xA1, buf, len);
-
-	dsi_display_register_read(dsi_display, 0xDA, &code_info, 1);
-	panel->panel_code_info = code_info;
-	DSI_ERR("Code info is 0x%X\n", panel->panel_code_info);
-
-	dsi_display_register_read(dsi_display, 0xDB, &stage_info, 1);
-	panel->panel_stage_info = stage_info;
-	DSI_ERR("Stage info is 0x%X\n", panel->panel_stage_info);
-
-	dsi_display_register_read(dsi_display, 0xDC, &prodution_info, 1);
-	panel->panel_production_info = prodution_info;
-	DSI_ERR("Production info is 0x%X\n", panel->panel_production_info);
-
-	count = mode->priv_info->cmd_sets[DSI_CMD_SET_LEVEL2_KEY_DISABLE].count;
-	if (!count) {
-		DSI_ERR("This panel does not support level2 key disable command\n");
-	} else {
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LEVEL2_KEY_DISABLE);
-		if (rc) {
-			DSI_ERR("Failed to send DSI_CMD_SET_LEVEL2_KEY_DISABLE commands\n");
-			goto error;
-		}
-	}
-
-error:
-	dsi_panel_release_panel_lock(panel);
-	dsi_display_cmd_engine_disable(dsi_display);
-	return rc;
+	return 0;
 }
 
 int dsi_display_get_serial_number(struct drm_connector *connector)
@@ -9790,7 +9706,7 @@ int dsi_display_get_serial_number(struct drm_connector *connector)
 	int panel_msec_int = 0;
 	int panel_msec_rem = 0;
 
-	DSI_DEBUG("start\n", __func__);
+	DSI_DEBUG("start %s()\n", __func__);
 
 	if ((connector == NULL) || (connector->encoder == NULL)
 		|| (connector->encoder->bridge == NULL))
@@ -11480,8 +11396,8 @@ int dsi_display_read_panel_id(struct dsi_display *dsi_display,
 		flags |= DSI_CTRL_CMD_LAST_COMMAND;
 	}
 	flags |= (DSI_CTRL_CMD_FETCH_MEMORY | DSI_CTRL_CMD_READ);
-    if (!m_ctrl->ctrl->vaddr)
-        goto error;
+	if (!m_ctrl->ctrl->vaddr)
+		goto error;
 
 	cmds->msg.rx_buf = buf;
 	cmds->msg.rx_len = len;
@@ -11592,7 +11508,7 @@ static int dsi_display_get_mipi_dsi_msg(const struct mipi_dsi_msg *msg, char* bu
 	len += snprintf(buf + len, PAGE_SIZE - len, "%02X ", (unsigned int)msg->flags);
 	/* Delay */
 	len += snprintf(buf + len, PAGE_SIZE - len, "%02X ", msg->wait_ms);
-	len += snprintf(buf + len, PAGE_SIZE - len, "%02X %02X ", msg->tx_len >> 8, msg->tx_len & 0x00FF);
+	len += snprintf(buf + len, PAGE_SIZE - len, "%02lX %02lX ", msg->tx_len >> 8, msg->tx_len & 0x00FF);
 
 	/* Packet Payload */
 	for (i = 0 ; i < msg->tx_len ; i++) {
@@ -11951,7 +11867,7 @@ int dsi_display_get_reg_value(struct dsi_display *dsi_display, struct dsi_panel 
 error:
 	dsi_panel_release_panel_lock(panel);
 	dsi_display_cmd_engine_disable(dsi_display);
-	DSI_ERR("end\n", __func__);
+	DSI_ERR("end %s()\n", __func__);
 	return rc;
 }
 

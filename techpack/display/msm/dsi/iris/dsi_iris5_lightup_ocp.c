@@ -1322,10 +1322,10 @@ static int _iris_panel_ctrl_set_max_pkt_size(struct dsi_display_ctrl *ctrl,
 	IRIS_LOGV("%s(%d)", __func__, __LINE__);
 	rlen = cmdset->cmds[0].msg.rx_len;
 	if (rlen > 128) {
-		IRIS_LOGE("%s(), invalid len: %d", __func__, rlen);
+		IRIS_LOGE("%s(), invalid len: %lu", __func__, rlen);
 		return -EINVAL;
 	}
-	IRIS_LOGD("%s(), len: %d", __func__, rlen);
+	IRIS_LOGD("%s(), len: %lu", __func__, rlen);
 
 	max_pktsize[0] = (rlen & 0xFF);
 

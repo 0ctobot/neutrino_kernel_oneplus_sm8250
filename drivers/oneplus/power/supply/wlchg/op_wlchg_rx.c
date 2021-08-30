@@ -179,7 +179,7 @@ int wlchg_rx_trx_enbale(struct rx_chip *chip, bool enable)
 	pval.intval = enable;
 	rc = prop->set_prop(prop, RX_PROP_TRX_ENABLE, &pval);
 	if (rc) {
-		pr_err("can't %s trx, rc=%d\n", rc, enable ? "enable" : "disable");
+		pr_err("can't %s trx, rc=%d\n", enable ? "enable" : "disable", rc);
 		return rc;
 	}
 

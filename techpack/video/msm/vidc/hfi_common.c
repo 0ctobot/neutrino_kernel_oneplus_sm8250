@@ -872,7 +872,7 @@ static int __smem_alloc(struct venus_hfi_device *dev,
 	int rc = 0;
 
 	if (!dev || !mem || !size) {
-		d_vpr_e("%s: invalid params %pK %pK %pK\n",
+		d_vpr_e("%s: invalid params %pK %pK %d\n",
 			__func__, dev, mem, size);
 		return -EINVAL;
 	}
@@ -1053,7 +1053,7 @@ static int __vote_buses(struct venus_hfi_device *device,
 				bus->range[0], bus->range[1]);
 
 			if (TRIVIAL_BW_CHANGE(bw_kbps, bw_prev) && bw_prev) {
-				s_vpr_l(sid, "Skip voting bus %s to %llu bps",
+				s_vpr_l(sid, "Skip voting bus %s to %lu bps",
 					bus->name, bw_kbps * 1000);
 				continue;
 			}
@@ -1273,7 +1273,7 @@ static int __set_clk_rate(struct venus_hfi_device *device,
 			return rc;
 		}
 		s_vpr_p(sid,
-			"cx_ipeak_update: up, clk freq = %lu rate = %lu threshold_freq = %lu\n",
+			"cx_ipeak_update: up, clk freq = %u rate = %llu threshold_freq = %llu\n",
 			device->clk_freq, rate, threshold_freq);
 	}
 
@@ -1294,7 +1294,7 @@ static int __set_clk_rate(struct venus_hfi_device *device,
 			return rc;
 		}
 		s_vpr_p(sid,
-			"cx_ipeak_update: up, clk freq = %lu rate = %lu threshold_freq = %lu\n",
+			"cx_ipeak_update: up, clk freq = %u rate = %llu threshold_freq = %llu\n",
 			device->clk_freq, rate, threshold_freq);
 	}
 

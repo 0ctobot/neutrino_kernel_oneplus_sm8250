@@ -337,7 +337,7 @@ do {                                                                            
 #define trace_int(string, value)                                                                                            \
 do {                                                                                                                        \
 	char str_buffer[STR_BUFFER_MAX_LENGTH/4] = {0};                                                                         \
-	snprintf(str_buffer, STR_BUFFER_MAX_LENGTH/4, "C|%d|%s|%d", camera_provider_pid, string, value);                      \
+	snprintf(str_buffer, STR_BUFFER_MAX_LENGTH/4, "C|%d|%s|%d", camera_provider_pid, string, (int)(value));                      \
 	trace_cam_tracing_mark_write(str_buffer);                                                                                   \
 } while (0)
 

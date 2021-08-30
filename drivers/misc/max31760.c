@@ -132,7 +132,7 @@ static ssize_t fan_store(struct device *dev, struct device_attribute *attr,
 
 	kstrtol(buf, 0, &val);
 	val1 = val >> 8;
-	pr_debug("%s, count:%d  val:%lx, val1:%lx, buf:%s\n",
+	pr_debug("%s, count:%lu  val:%lx, val1:%lx, buf:%s\n",
 				 __func__, count, val, val1, buf);
 	if (val1 == 0x50) {
 		val1 = val & 0xFF;
@@ -191,11 +191,12 @@ static int max31760_parse_dt(struct device *dev,
 	if (!gpio_is_valid(pdata->fan_pwr_bp)) {
 		pr_err("%s fan_pwr_bp gpio not specified\n", __func__);
 		ret = -EINVAL;
-	} else
+	} else {
 		ret = gpio_request(pdata->fan_pwr_bp, "fan_pwr_bp");
 		if (ret) {
 			pr_err("max31760 fan_pwr_bp gpio request failed\n");
 			goto error2;
+	}
 	}
 	turn_gpio(pdata, true);
 
@@ -211,7 +212,7 @@ error1:
 static int max31760_fan_pwr_enable_vregs(struct device *dev,
 				 struct max31760 *pdata)
 {
-	int ret;
+	int ret = 0;
 	struct regulator *reg;
 
 	/* Fan Control LDO L10A */
@@ -248,7 +249,7 @@ static const struct regmap_config max31760_regmap = {
 static int max31760_probe(struct i2c_client *client,
 				const struct i2c_device_id *id)
 {
-	int ret;
+	int ret = 0;
 	struct max31760 *pdata;
 
 	if (!client || !client->dev.of_node) {
@@ -294,7 +295,7 @@ static int max31760_probe(struct i2c_client *client,
 
 	ret = sysfs_create_group(&pdata->dev->kobj, &max31760_fs_attr_group);
 	if (ret)
-		pr_err("%s unable to register max31760 sysfs nodes\n");
+		pr_err("%s unable to register max31760 sysfs nodes\n", __func__);
 
 	/* 00 - 0x01 -- 33Hz */
 	/* 01 - 0x09 -- 150Hz */

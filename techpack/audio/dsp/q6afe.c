@@ -9144,6 +9144,7 @@ static int afe_get_sp_th_vi_v_vali_data(
 
 	mutex_lock(&this_afe.afe_cmd_lock);
 	memset(&param_hdr, 0, sizeof(param_hdr));
+	memset(th_vi_v_vali, 0, sizeof(*th_vi_v_vali));
 
 	param_hdr.module_id = AFE_MODULE_SPEAKER_PROTECTION_V2_TH_VI;
 	param_hdr.instance_id = INSTANCE_ID_0;
@@ -10735,7 +10736,7 @@ static void afe_release_uevent_data(struct kobject *kobj)
 #ifdef CONFIG_SND_SOC_TFA9874_OR_HAPTIC
 int send_tfa_cal_apr(void *buf, int cmd_size, bool bRead)
 {
-	int32_t result, port_id = AFE_PORT_ID_TFADSP_RX;
+	int32_t result = 0, port_id = AFE_PORT_ID_TFADSP_RX;
 	uint32_t port_index = 0, payload_size = 0;
 	size_t len;
 	struct rtac_cal_block_data *tfa_cal = &(this_afe.tfa_cal);

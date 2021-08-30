@@ -1627,7 +1627,7 @@ static long wlchg_dev_ioctl(struct file *filp, unsigned int cmd,
 		break;
 	case WLCHG_NOTIFY_CHARGE_TYPE:
 		chg_status->charge_type = arg;
-		chg_info("charge type is %d\n", arg);
+		chg_info("charge type is %lu\n", arg);
 		if (chip->chg_param.fastchg_fod_enable &&
 		    chg_status->charge_type == WPC_CHARGE_TYPE_FAST) {
 			wlchg_rx_set_fod_parm(g_rx_chip, chip->chg_param.fastchg_fod_parm);
@@ -1690,7 +1690,7 @@ static ssize_t wlchg_dev_write(struct file *filp, const char __user *buf,
 	char temp_buf[3];
 
 	if (count != 3) {
-		chg_err("Data length error, len=%d\n", count);
+		chg_err("Data length error, len=%lu\n", count);
 		return -EFAULT;
 	}
 
@@ -1800,7 +1800,7 @@ static int handle_batt_temp_cool(struct op_chg_chip *chip)
 	     (chip->batt_volt > chg_param->cool_vbat_thr_mv)) ||
 	    ((pre_vbat > chg_param->cool_vbat_thr_mv) &&
 	     (chip->batt_volt <= chg_param->cool_vbat_thr_mv))) {
-		chg_info("battery voltage changes%d\n");
+		chg_info("battery voltage changes\n");
 		chg_status->is_power_changed = true;
 	}
 	pre_vbat = chip->batt_volt;
@@ -5202,7 +5202,7 @@ static ssize_t proc_wireless_ftm_mode_write(struct file *file,
 	char buffer[5] = { 0 };
 	int val;
 
-	chg_err("%s: len[%d] start.\n", __func__, len);
+	chg_err("%s: len[%lu] start.\n", __func__, len);
 	if (len > 5) {
 		return -EFAULT;
 	}

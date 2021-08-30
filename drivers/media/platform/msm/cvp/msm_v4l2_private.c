@@ -168,7 +168,7 @@ static int _copy_sysprop_to_user(struct cvp_kmd_arg *kp,
 static void print_hfi_short(struct cvp_kmd_arg __user *up)
 {
 	struct cvp_kmd_hfi_packet *pkt;
-	unsigned int words[5];
+	unsigned int words[5] = { 0 };
 
 	pkt = &up->data.hfi_pkt;
 	if (get_user(words[0], &up->type) ||

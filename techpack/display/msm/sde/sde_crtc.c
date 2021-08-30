@@ -390,7 +390,7 @@ static ssize_t measured_fps_show(struct device *device,
 	fps_int = (uint64_t) sde_crtc->fps_info.measured_fps;
 	fps_decimal = do_div(fps_int, 10);
 	return scnprintf(buf, PAGE_SIZE,
-	"fps: %d.%d duration:%d frame_count:%lld\n", fps_int, fps_decimal,
+	"fps: %llu.%llu duration:%d frame_count:%lld\n", fps_int, fps_decimal,
 			sde_crtc->fps_info.fps_periodic_duration, frame_count);
 }
 
@@ -1222,6 +1222,9 @@ static int pstate_cmp(const void *a, const void *b)
 	struct plane_state *pb = (struct plane_state *)b;
 	int rc = 0;
 	int pa_zpos, pb_zpos;
+
+	if ((!pa || !pa->sde_pstate) || (!pb || !pb->sde_pstate))
+		return rc;
 
 	pa_zpos = sde_plane_get_property(pa->sde_pstate, PLANE_PROP_ZPOS);
 	pb_zpos = sde_plane_get_property(pb->sde_pstate, PLANE_PROP_ZPOS);

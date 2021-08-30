@@ -33,7 +33,7 @@ void populate_bound_rows(
 	for (j = 0; j < row->num_bound_synxs;
 		j++) {
 		cur += scnprintf(cur, end - cur,
-			"\n\tID: %d State: %s",
+			"\n\tID: %d State: %d",
 			row->bound_synxs[j].external_data->synx_obj,
 			state);
 	}
@@ -114,13 +114,9 @@ static ssize_t synx_table_read(struct file *file,
 			err_node, err_node_tmp,
 			&synx_dev->synx_debug_head,
 			node) {
-			if (err_node->timestamp != NULL) {
-				cur += scnprintf(cur, end - cur,
-				"\n\tTime: %s - ID: %d - Code: %d",
-				err_node->timestamp,
-				err_node->synx_obj,
-				err_node->error_code);
-			}
+			cur += scnprintf(cur, end - cur,
+				"\n\tTime: %s - ID: %d - Code: %d", err_node->timestamp,
+				err_node->synx_obj, err_node->error_code);
 			list_del(&err_node->node);
 			kfree(err_node);
 		}

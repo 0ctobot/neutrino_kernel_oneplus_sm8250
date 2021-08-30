@@ -1584,7 +1584,7 @@ static int fg_gen4_adjust_ki_coeff_full_soc(struct fg_gen4_chip *chip,
 						int batt_temp)
 {
 	struct fg_dev *fg = &chip->fg;
-	int rc, ki_coeff_full_soc_norm, ki_coeff_full_soc_low;
+	int rc, ki_coeff_full_soc_norm = 0, ki_coeff_full_soc_low = 0;
 	u8 val;
 
 	if ((batt_temp < 0) ||
@@ -4681,10 +4681,11 @@ static int fg_psy_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_TIME_TO_FULL_AVG:
 		if (fg->use_external_fg && external_fg
-			&& external_fg->get_time_to_full)
+			&& external_fg->get_time_to_full) {
 			rc = external_fg->get_time_to_full();
 			if (rc >= 0)
 				pval->intval = rc;
+		}
 		else
 			rc = ttf_get_time_to_full(chip->ttf, &pval->intval);
 		break;
@@ -4695,10 +4696,11 @@ static int fg_psy_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_TIME_TO_FULL_NOW:
 		if (fg->iskebab) {
 			if (fg->use_external_fg && external_fg
-				&& external_fg->get_time_to_full)
+				&& external_fg->get_time_to_full) {
 				rc = external_fg->get_time_to_full();
 				if (rc >= 0)
 					pval->intval = rc;
+			}
 		} else
 			rc = ttf_get_time_to_full(chip->ttf, &pval->intval);
 		pval->intval = pval->intval > 0 ? pval->intval : 1;
@@ -6304,7 +6306,7 @@ static int fg_gen4_parse_dt(struct fg_gen4_chip *chip)
 	rc = of_property_read_u32(node, "qcom,fg-esr-meas-curr-ma", &temp);
 	if (!rc) {
 		/* ESR measurement current range is 60-240 mA */
-		if (temp >= 60 || temp <= 240)
+		if (temp >= 60 && temp <= 240)
 			chip->dt.esr_meas_curr_ma = temp;
 	}
 
