@@ -28,9 +28,6 @@
 #include <qdf_types.h>
 #include "qdf_util.h"
 #include <linux/irq.h>
-#ifdef CONFIG_SCHED_CORE_CTL
-#include <linux/sched/core_ctl.h>
-#endif
 
 struct qdf_cpu_mask;
 struct qdf_devm;
@@ -162,26 +159,4 @@ static inline int __qdf_cpumask_intersects(qdf_cpu_mask *srcp1,
 {
 	return cpumask_intersects(srcp1, srcp2);
 }
-
-#ifdef CONFIG_SCHED_CORE_CTL
-/**
- * __qdf_core_ctl_set_boost() - This API is used to move tasks
- * to CPUs with higher capacity
- *
- * This function moves tasks to higher capacity CPUs than those
- * where the tasks would have  normally ended up. This is
- * applicable only to defconfig builds.
- *
- * Return: 0 on success
- */
-static inline int __qdf_core_ctl_set_boost(bool boost)
-{
-	return core_ctl_set_boost(boost);
-}
-#else
-static inline int __qdf_core_ctl_set_boost(bool boost)
-{
-	return 0;
-}
-#endif
 #endif /* __I_QDF_DEV_H */

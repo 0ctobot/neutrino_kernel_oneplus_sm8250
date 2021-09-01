@@ -132,6 +132,6 @@ static inline int qdf_cpumask_intersects(qdf_cpu_mask *srcp1,
 
 static inline int qdf_core_ctl_set_boost(bool boost)
 {
-	return __qdf_core_ctl_set_boost(boost);
+	return 0;
 }
 #endif /* __QDF_DEV_H */

@@ -77,15 +77,8 @@ static inline int hif_napi_core_ctl_set_boost(bool boost)
 	return qdf_core_ctl_set_boost(boost);
 }
 
-#ifdef HIF_CPU_PERF_AFFINE_MASK
-static inline int hif_core_ctl_set_boost(bool boost)
-{
-	return hif_napi_core_ctl_set_boost(boost);
-}
-#else
 static inline int hif_core_ctl_set_boost(bool boost)
 {
 	return 0;
 }
-#endif
 #endif

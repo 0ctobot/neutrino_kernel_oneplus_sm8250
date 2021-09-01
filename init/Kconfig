@@ -428,15 +428,6 @@ config IRQ_TIME_ACCOUNTING
 
 	  If in doubt, say N here.
 
-config SCHED_WALT
-	bool "Support window based load tracking"
-	depends on SMP
-	help
-	This feature will allow the scheduler to maintain a tunable window
-	based set of metrics for tasks and runqueues. These metrics can be
-	used to guide task placement as well as task frequency requirements
-	for cpufreq governors.
-
 config HAVE_SCHED_AVG_IRQ
 	def_bool y
 	depends on IRQ_TIME_ACCOUNTING || PARAVIRT_TIME_ACCOUNTING
@@ -795,6 +786,15 @@ config PELT_UTIL_HALFLIFE_8
 
 endchoice
 
+config PELT_COMPATIBILITY_LAYER
+	bool "Compatibility layer for Qualcomm performance HALs"
+	depends on !SCHED_WALT
+	help
+	  This option enables a non-operational compatibility layer for use in
+	  lieu of Window Assisted Load Tracking on systems which expect it.
+
+	  If unsure, say N.
+
 endmenu # FAIR Scheduler tunables"
 
 #
@@ -1113,16 +1113,6 @@ config SOCK_CGROUP_DATA
 	default n
 
 endif # CGROUPS
-
-config SCHED_CORE_CTL
-	bool "QTI Core Control"
-	depends on SMP && SCHED_WALT
-	help
-	  This options enables the core control functionality in
-	  the scheduler. Core control automatically offline and
-	  online cores based on cpu load and utilization.
-
-	  If unsure, say N here.
 
 menuconfig NAMESPACES
 	bool "Namespaces support" if EXPERT

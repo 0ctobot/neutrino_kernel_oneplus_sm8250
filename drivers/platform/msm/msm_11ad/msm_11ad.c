@@ -22,7 +22,6 @@
 #include <linux/interrupt.h>
 #include <linux/cpumask.h>
 #include <linux/cpufreq.h>
-#include <linux/sched/core_ctl.h>
 #include "wil_platform.h"
 #include "msm_11ad.h"
 
